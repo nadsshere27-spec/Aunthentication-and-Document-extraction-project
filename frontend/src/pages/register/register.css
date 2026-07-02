@@ -1,0 +1,101 @@
+.register-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #E8EFE8;
+  padding: 30px;
+}
+
+.register-content {
+  width: 100%;
+  max-width: 430px;
+}
+
+.register-heading {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.register-heading h1 {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 600;
+  color: #2D3436;
+}
+
+.register-heading p {
+  margin-top: 10px;
+  font-size: 15px;
+  color: #6B7280;
+}
+
+.register-form {
+  margin-top: 5px;
+}
+
+.password-hint {
+  margin-top: -10px;
+  margin-bottom: 18px;
+}
+
+.password-hint p {
+  font-size: 12px;
+  color: #6B7280;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.login-text {
+  margin-top: 25px;
+  text-align: center;
+  font-size: 15px;
+  color: #6B7280;
+}
+
+.login-text a {
+  color: #5E8265;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.login-text a:hover {
+  text-decoration: underline;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .register-page {
+    padding: 20px;
+  }
+
+  .register-content {
+    max-width: 100%;
+  }
+
+  .register-heading h1 {
+    font-size: 28px;
+  }
+
+  .register-heading p {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .register-page {
+    padding: 16px;
+  }
+
+  .register-heading h1 {
+    font-size: 24px;
+  }
+
+  .login-text {
+    font-size: 14px;
+  }
+
+  .password-hint p {
+    font-size: 11px;
+  }
+}

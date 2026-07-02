@@ -1,0 +1,22 @@
+# dependencies
+node_modules/
+
+# environment variables
+.env
+
+# uploaded user files
+uploads/
+
+# OCR data file
+eng.traineddata
+
+# frontend build
+build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# logs
+npm-debug.log*
+*.log

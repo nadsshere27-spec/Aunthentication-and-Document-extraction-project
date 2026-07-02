@@ -1,0 +1,140 @@
+.dashboard-page {
+  min-height: 100vh;
+  background: #F7F8F5;
+  padding: 40px 30px;
+}
+
+.dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.dashboard-header {
+  margin-bottom: 35px;
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.dashboard-header h1 {
+  font-size: 34px;
+  font-weight: 600;
+  color: #2D3436;
+  margin: 0;
+}
+
+.dashboard-header p {
+  font-size: 16px;
+  color: #6B7280;
+  margin-top: 6px;
+}
+
+.logout-btn {
+  background: #DC2626;
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.logout-btn:hover {
+  background: #B91C1C;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.dashboard-card {
+  text-align: center;
+  padding: 10px 0;
+}
+
+.dashboard-card .card-icon {
+  font-size: 42px;
+  margin-bottom: 10px;
+}
+
+.dashboard-card h3 {
+  font-size: 20px;
+  color: #2D3436;
+  margin: 0 0 8px 0;
+}
+
+.dashboard-card p {
+  font-size: 15px;
+  color: #6B7280;
+  margin: 0 0 18px 0;
+}
+
+.dashboard-card .btn {
+  width: auto;
+  padding: 12px 32px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .dashboard-page {
+    padding: 30px 20px;
+  }
+
+  .dashboard-header h1 {
+    font-size: 28px;
+  }
+
+  .dashboard-header p {
+    font-size: 14px;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .dashboard-card .card-icon {
+    font-size: 36px;
+  }
+
+  .header-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .logout-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-page {
+    padding: 20px 16px;
+  }
+
+  .dashboard-header h1 {
+    font-size: 24px;
+  }
+
+  .dashboard-card h3 {
+    font-size: 18px;
+  }
+
+  .dashboard-card p {
+    font-size: 14px;
+  }
+
+  .dashboard-card .card-icon {
+    font-size: 32px;
+  }
+}

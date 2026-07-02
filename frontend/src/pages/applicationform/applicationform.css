@@ -1,0 +1,118 @@
+.form-page {
+  min-height: 100vh;
+  background: #F7F8F5;
+  padding: 40px 30px;
+}
+
+.form-container {
+  max-width: 750px;
+  margin: 0 auto;
+}
+
+.form-header {
+  margin-bottom: 30px;
+}
+
+.form-header h1 {
+  font-size: 34px;
+  font-weight: 600;
+  color: #2D3436;
+  margin: 0;
+}
+
+.form-header p {
+  font-size: 16px;
+  color: #6B7280;
+  margin-top: 6px;
+}
+
+.application-form {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-row {
+  width: 100%;
+}
+
+.input-group {
+  margin-bottom: 18px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #2D3436;
+  margin-bottom: 6px;
+}
+
+.input-group textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #D7DDD8;
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
+  transition: 0.3s;
+  background: #FFFFFF;
+}
+
+.input-group textarea:focus {
+  outline: none;
+  border-color: #5E8265;
+  box-shadow: 0 0 0 3px rgba(94, 130, 101, 0.15);
+}
+
+.input-group textarea::placeholder {
+  color: #B0B8B0;
+}
+
+.back-link {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.back-link a {
+  font-size: 14px;
+  color: #5E8265;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.back-link a:hover {
+  text-decoration: underline;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .form-page {
+    padding: 30px 20px;
+  }
+
+  .form-header h1 {
+    font-size: 28px;
+  }
+
+  .form-header p {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-page {
+    padding: 20px 16px;
+  }
+
+  .form-header h1 {
+    font-size: 24px;
+  }
+
+  .input-group textarea {
+    font-size: 14px;
+    min-height: 80px;
+  }
+}

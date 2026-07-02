@@ -1,0 +1,96 @@
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import Card from "../../components/Card";
+import InputField from "../../components/InputField";
+import Button from "../../components/Button";
+import { loginUser } from "../../services/api";
+import "./login.css";
+
+function Login() {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setSuccess("");
+
+    const result = await loginUser(formData);
+
+    if (result.success) {
+      setSuccess("Login successful! Redirecting...");
+      localStorage.setItem("token", result.token);
+      localStorage.setItem("user", JSON.stringify(result.user));
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 1500);
+    } else {
+      setError(result.message || "Login failed. Please try again.");
+    }
+
+    setLoading(false);
+  };
+
+  return (
+    <div className="login-page">
+      <div className="login-content">
+        <div className="login-heading">
+          <h1>Sign in</h1>
+          <p>Continue to your account.</p>
+        </div>
+
+        <Card>
+          <form className="login-form" onSubmit={handleSubmit}>
+            {error && <div className="error-message">{error}</div>}
+            {success && <div className="success-message">{success}</div>}
+
+            <InputField
+              label="Email"
+              type="email"
+              name="email"
+              placeholder="Enter your email"
+              value={formData.email}
+              onChange={handleChange}
+            />
+
+            <InputField
+              label="Password"
+              type="password"
+              name="password"
+              placeholder="Enter your password"
+              value={formData.password}
+              onChange={handleChange}
+            />
+
+            <div className="forgot-link">
+              <Link to="/forgot-password">Forgot password?</Link>
+            </div>
+
+            <Button text={loading ? "Signing in..." : "Sign In"} type="submit" disabled={loading} />
+          </form>
+
+          <div className="register-text">
+            <span>Don't have an account? </span>
+            <Link to="/register">Create one</Link>
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+export default Login;

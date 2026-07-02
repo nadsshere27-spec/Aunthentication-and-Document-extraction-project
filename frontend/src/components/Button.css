@@ -1,0 +1,21 @@
+.btn {
+  width: 100%;
+  padding: 14px;
+  background-color: #6B8F71;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  background-color: #4F6F52;
+}
+
+.btn:disabled {
+  background-color: #B8C7BA;
+  cursor: not-allowed;
+}
