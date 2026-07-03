@@ -143,5 +143,53 @@ export const submitApplication = async (token, applicationData) => {
     return { success: false, message: error.message || "Network error" };
   }
 };
+// ============================================
+// ADMIN APIs
+// ============================================
 
+export const adminLogin = async (username, password) => {
+  try {
+    const response = await axios.post(`${API_URL}/admin/login`, { username, password });
+    return response.data;
+  } catch (error) {
+    if (error.response) return error.response.data;
+    return { success: false, message: error.message || "Network error" };
+  }
+};
+
+export const getAllApplications = async (adminToken) => {
+  try {
+    const response = await axios.get(`${API_URL}/admin/applications`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response) return error.response.data;
+    return { success: false, message: error.message || "Network error" };
+  }
+};
+
+export const getApplicationById = async (adminToken, id) => {
+  try {
+    const response = await axios.get(`${API_URL}/admin/applications/${id}`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response) return error.response.data;
+    return { success: false, message: error.message || "Network error" };
+  }
+};
+
+export const updateApplication = async (adminToken, id, data) => {
+  try {
+    const response = await axios.put(`${API_URL}/admin/applications/${id}`, data, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response) return error.response.data;
+    return { success: false, message: error.message || "Network error" };
+  }
+};
 export default api;

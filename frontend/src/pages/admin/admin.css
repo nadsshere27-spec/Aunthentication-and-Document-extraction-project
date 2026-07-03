@@ -1,0 +1,213 @@
+/* src/pages/admin/admin.css */
+
+.admin-login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f4f6f8;
+  padding: 20px;
+}
+
+.admin-login-card {
+  width: 100%;
+  max-width: 400px;
+  background: #fff;
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.admin-login-card h2 {
+  margin-bottom: 24px;
+  font-size: 1.5rem;
+  color: #1a1a1a;
+  text-align: center;
+}
+
+.admin-form-group {
+  margin-bottom: 18px;
+}
+
+.admin-form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #444;
+}
+
+.admin-form-group input,
+.admin-form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.15s ease;
+  box-sizing: border-box;
+}
+
+.admin-form-group input:focus,
+.admin-form-group textarea:focus {
+  border-color: #4a7c59;
+}
+
+.admin-error {
+  color: #d64545;
+  font-size: 0.88rem;
+  margin-bottom: 12px;
+}
+
+.admin-btn {
+  width: 100%;
+  padding: 11px;
+  background: #4a7c59;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.admin-btn:hover:not(:disabled) {
+  background: #3e6a4b;
+}
+
+.admin-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Applications table page */
+
+.admin-page {
+  min-height: 100vh;
+  background: #f4f6f8;
+  padding: 40px 20px;
+}
+
+.admin-page-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  padding: 32px;
+}
+
+.admin-page-inner h2 {
+  margin-bottom: 24px;
+  font-size: 1.6rem;
+  color: #1a1a1a;
+}
+
+.admin-table-wrapper {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table th {
+  text-align: left;
+  padding: 12px;
+  background: #f0f2f5;
+  color: #444;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-bottom: 2px solid #e0e3e8;
+}
+
+.admin-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eef0f3;
+  font-size: 0.92rem;
+  color: #222;
+}
+
+.admin-table tr:hover td {
+  background: #fafbfc;
+}
+
+.admin-empty-row td {
+  text-align: center;
+  padding: 30px;
+  color: #888;
+}
+
+.admin-edit-btn {
+  padding: 6px 14px;
+  background: #4a7c59;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.admin-edit-btn:hover {
+  background: #3e6a4b;
+}
+
+/* Edit application page */
+
+.edit-app-page {
+  min-height: 100vh;
+  background: #f4f6f8;
+  padding: 40px 20px;
+}
+
+.edit-app-inner {
+  max-width: 600px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  padding: 32px;
+}
+
+.edit-app-inner h2 {
+  margin-bottom: 24px;
+  font-size: 1.5rem;
+  color: #1a1a1a;
+}
+
+.edit-app-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.edit-app-actions .admin-btn {
+  width: auto;
+  padding: 10px 20px;
+}
+
+.edit-app-cancel-btn {
+  padding: 10px 20px;
+  background: #eee;
+  color: #333;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.edit-app-cancel-btn:hover {
+  background: #e0e0e0;
+}
+
+.admin-loading-text {
+  text-align: center;
+  margin-top: 60px;
+  color: #666;
+}

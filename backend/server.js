@@ -25,16 +25,19 @@ const authRoutes = require('./src/routes/auth/auth.routes');
 const cvRoutes = require('./src/routes/cv/cv.routes');
 const aiRoutes = require('./src/routes/ai/ai.routes');
 const applicationRoutes = require('./src/routes/application/application.routes');
+const adminRoutes = require('./src/routes/admin/admin.routes');
 
 console.log('✅ Auth Routes loaded successfully!');
 console.log('✅ CV Routes loaded successfully!');
 console.log('✅ AI Routes loaded successfully!');
 console.log('✅ Application Routes loaded successfully!');
+console.log('✅ Admin Routes loaded successfully!');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/cv', cvRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/application', applicationRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health Route
 app.get('/api/health', (req, res) => {

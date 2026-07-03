@@ -97,6 +97,17 @@ function Dashboard() {
               <Button text="View Profile" />
             </div>
           </Card>
+
+          <Card>
+            <div className="dashboard-card">
+              <div className="card-icon">🔐</div>
+              <h3>Admin Panel</h3>
+              <p>View and edit all submitted applications.</p>
+              <Link to="/admin">
+                <Button text="Open Admin Panel" />
+              </Link>
+            </div>
+          </Card>
         </div>
       </div>
     </div>
