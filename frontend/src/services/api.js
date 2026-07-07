@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = "/api";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -73,7 +73,7 @@ export const uploadCV = async (token, formData) => {
   try {
     const response = await axios.post(`${API_URL}/cv/upload`, formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
         Authorization: `Bearer ${token}`,
       },
     });
@@ -87,7 +87,9 @@ export const uploadCV = async (token, formData) => {
 export const extractCVData = async (token) => {
   try {
     const response = await axios.post(`${API_URL}/cv/extract`, {}, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
     return response.data;
   } catch (error) {
@@ -99,7 +101,9 @@ export const extractCVData = async (token) => {
 export const getCVData = async (token) => {
   try {
     const response = await axios.get(`${API_URL}/cv/data`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
     return response.data;
   } catch (error) {
@@ -117,7 +121,11 @@ export const generateAIAnswer = async (token, fieldType) => {
     const response = await axios.post(
       `${API_URL}/ai/generate-answer`,
       { fieldType },
-      { headers: { Authorization: `Bearer ${token}` } }
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
     );
     return response.data;
   } catch (error) {
@@ -135,7 +143,11 @@ export const submitApplication = async (token, applicationData) => {
     const response = await axios.post(
       `${API_URL}/application/submit`,
       applicationData,
-      { headers: { Authorization: `Bearer ${token}` } }
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
     );
     return response.data;
   } catch (error) {
@@ -143,13 +155,17 @@ export const submitApplication = async (token, applicationData) => {
     return { success: false, message: error.message || "Network error" };
   }
 };
+
 // ============================================
 // ADMIN APIs
 // ============================================
 
 export const adminLogin = async (username, password) => {
   try {
-    const response = await axios.post(`${API_URL}/admin/login`, { username, password });
+    const response = await axios.post(`${API_URL}/admin/login`, {
+      username,
+      password,
+    });
     return response.data;
   } catch (error) {
     if (error.response) return error.response.data;
@@ -160,7 +176,9 @@ export const adminLogin = async (username, password) => {
 export const getAllApplications = async (adminToken) => {
   try {
     const response = await axios.get(`${API_URL}/admin/applications`, {
-      headers: { Authorization: `Bearer ${adminToken}` },
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+      },
     });
     return response.data;
   } catch (error) {
@@ -172,7 +190,9 @@ export const getAllApplications = async (adminToken) => {
 export const getApplicationById = async (adminToken, id) => {
   try {
     const response = await axios.get(`${API_URL}/admin/applications/${id}`, {
-      headers: { Authorization: `Bearer ${adminToken}` },
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+      },
     });
     return response.data;
   } catch (error) {
@@ -184,7 +204,9 @@ export const getApplicationById = async (adminToken, id) => {
 export const updateApplication = async (adminToken, id, data) => {
   try {
     const response = await axios.put(`${API_URL}/admin/applications/${id}`, data, {
-      headers: { Authorization: `Bearer ${adminToken}` },
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+      },
     });
     return response.data;
   } catch (error) {
@@ -192,4 +214,5 @@ export const updateApplication = async (adminToken, id, data) => {
     return { success: false, message: error.message || "Network error" };
   }
 };
+
 export default api;
