@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { adminLogin, getAllApplications } from "../../services/api";
 import "./admin.css";
@@ -6,12 +6,32 @@ import "./admin.css";
 function Admin() {
   const navigate = useNavigate();
   const [loggedIn, setLoggedIn] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [adminToken, setAdminToken] = useState("");
   const [applications, setApplications] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const loadApplications = async (token) => {
+    const appsResult = await getAllApplications(token);
+    if (appsResult.success) {
+      setApplications(appsResult.applications);
+      setLoggedIn(true);
+    } else {
+      sessionStorage.removeItem("adminToken");
+      setLoggedIn(false);
+    }
+  };
+
+  useEffect(() => {
+    const existingToken = sessionStorage.getItem("adminToken");
+    if (existingToken) {
+      loadApplications(existingToken).finally(() => setCheckingSession(false));
+    } else {
+      setCheckingSession(false);
+    }
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -21,20 +41,24 @@ function Admin() {
     const result = await adminLogin(username, password);
 
     if (result.success) {
-      setAdminToken(result.token);
-      const appsResult = await getAllApplications(result.token);
-      if (appsResult.success) {
-        setApplications(appsResult.applications);
-        setLoggedIn(true);
-      } else {
-        setError(appsResult.message || "Failed to load applications");
-      }
+      sessionStorage.setItem("adminToken", result.token);
+      await loadApplications(result.token);
     } else {
       setError(result.message || "Invalid admin credentials");
     }
 
     setLoading(false);
   };
+
+  const handleAdminLogout = () => {
+    sessionStorage.removeItem("adminToken");
+    setLoggedIn(false);
+    setApplications([]);
+  };
+
+  if (checkingSession) {
+    return <p className="admin-loading-text">Loading...</p>;
+  }
 
   if (!loggedIn) {
     return (
@@ -73,7 +97,12 @@ function Admin() {
   return (
     <div className="admin-page">
       <div className="admin-page-inner">
-        <h2>All Applications</h2>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+          <h2 style={{ marginBottom: 0 }}>All Applications</h2>
+          <button className="edit-app-cancel-btn" onClick={handleAdminLogout}>
+            Admin Logout
+          </button>
+        </div>
         <div className="admin-table-wrapper">
           <table className="admin-table">
             <thead>
@@ -102,11 +131,7 @@ function Admin() {
                     <td>
                       <button
                         className="admin-edit-btn"
-                        onClick={() =>
-                          navigate(`/admin/applications/${app._id}/edit`, {
-                            state: { adminToken },
-                          })
-                        }
+                        onClick={() => navigate(`/admin/applications/${app._id}/edit`)}
                       >
                         Edit
                       </button>

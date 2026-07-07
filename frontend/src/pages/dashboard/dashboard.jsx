@@ -108,6 +108,17 @@ function Dashboard() {
               </Link>
             </div>
           </Card>
+
+          <Card>
+            <div className="dashboard-card">
+              <div className="card-icon">💻</div>
+              <h3>Code Editor</h3>
+              <p>Write code with AI-powered syntax error fixing.</p>
+              <Link to="/code-editor">
+                <Button text="Open Editor" />
+              </Link>
+            </div>
+          </Card>
         </div>
       </div>
     </div>

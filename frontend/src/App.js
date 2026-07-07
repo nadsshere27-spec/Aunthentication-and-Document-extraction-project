@@ -9,6 +9,7 @@ import UploadCV from "./pages/uploadcv/uploadcv";
 import ApplicationForm from "./pages/applicationform/applicationform";
 import Admin from "./pages/admin/Admin";
 import EditApplication from "./pages/admin/EditApplication";
+import CodeEditor from "./pages/CodeEditor";
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Route path="/application-form" element={<ApplicationForm />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/admin/applications/:id/edit" element={<EditApplication />} />
+        <Route path="/code-editor" element={<CodeEditor />} />
       </Routes>
     </BrowserRouter>
   );

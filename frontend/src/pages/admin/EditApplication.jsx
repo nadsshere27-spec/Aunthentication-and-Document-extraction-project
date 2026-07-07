@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { getApplicationById, updateApplication } from "../../services/api";
 import "./admin.css";
 
 function EditApplication() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
-  const adminToken = location.state?.adminToken;
+  const adminToken = sessionStorage.getItem("adminToken");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
