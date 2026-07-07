@@ -10,7 +10,10 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: [
+    'http://localhost:3000',
+    process.env.FRONTEND_URL
+  ].filter(Boolean),
   credentials: true
 }));
 
@@ -26,18 +29,21 @@ const cvRoutes = require('./src/routes/cv/cv.routes');
 const aiRoutes = require('./src/routes/ai/ai.routes');
 const applicationRoutes = require('./src/routes/application/application.routes');
 const adminRoutes = require('./src/routes/admin/admin.routes');
+const aiCodeFixRoutes = require('./src/routes/ai/aiCodeFix.routes');
 
 console.log('✅ Auth Routes loaded successfully!');
 console.log('✅ CV Routes loaded successfully!');
 console.log('✅ AI Routes loaded successfully!');
 console.log('✅ Application Routes loaded successfully!');
 console.log('✅ Admin Routes loaded successfully!');
+console.log('✅ AI Code Fix Routes loaded successfully!');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/cv', cvRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/application', applicationRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/ai-tools', aiCodeFixRoutes);
 
 // Health Route
 app.get('/api/health', (req, res) => {
@@ -70,26 +76,42 @@ app.use((err, req, res, next) => {
 });
 
 // ============================================
-// AUTO-DETECT AVAILABLE PORT
+// DATABASE CONNECTION (works for both local + Vercel)
 // ============================================
-const startServer = async () => {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log("MongoDB Atlas connected successfully");
+let isConnected = false;
 
-    const PORT = await portfinder.getPortPromise({
-      port: 5000,
-      stopPort: 5010
-    });
-
-    app.listen(PORT, () => {
-      console.log(`✅ Server running on port ${PORT}`);
-      console.log(`✅ Health check: http://localhost:${PORT}/api/health`);
-      console.log(`✅ IMPORTANT: Update frontend api.js with port ${PORT}`);
-    });
-  } catch (error) {
-    console.error('❌ Server Error:', error);
-  }
+const connectDB = async () => {
+  if (isConnected) return;
+  await mongoose.connect(process.env.MONGODB_URI);
+  isConnected = true;
+  console.log("MongoDB Atlas connected successfully");
 };
 
-startServer();
+connectDB().catch((err) => console.error('❌ DB connection error:', err));
+
+// ============================================
+// LOCAL DEV ONLY — only runs when you do `node server.js` on your machine
+// ============================================
+if (process.env.VERCEL !== '1') {
+  const startServer = async () => {
+    try {
+      const PORT = await portfinder.getPortPromise({
+        port: 5000,
+        stopPort: 5010
+      });
+
+      app.listen(PORT, () => {
+        console.log(`✅ Server running on port ${PORT}`);
+        console.log(`✅ Health check: http://localhost:${PORT}/api/health`);
+        console.log(`✅ IMPORTANT: Update frontend api.js with port ${PORT}`);
+      });
+    } catch (error) {
+      console.error('❌ Server Error:', error);
+    }
+  };
+
+  startServer();
+}
+
+// Export for Vercel
+module.exports = app;
