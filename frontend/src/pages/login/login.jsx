@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Card from "../../components/Card";
 import InputField from "../../components/InputField";
@@ -12,9 +12,24 @@ function Login() {
     email: "",
     password: "",
   });
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  // Auto-fill saved credentials on page load, if "Remember me" was used before
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("rememberedEmail");
+    const savedPassword = localStorage.getItem("rememberedPassword");
+
+    if (savedEmail && savedPassword) {
+      setFormData({
+        email: savedEmail,
+        password: savedPassword,
+      });
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleChange = (e) => {
     setFormData({
@@ -35,6 +50,15 @@ function Login() {
       setSuccess("Login successful! Redirecting...");
       localStorage.setItem("token", result.token);
       localStorage.setItem("user", JSON.stringify(result.user));
+
+      if (rememberMe) {
+        localStorage.setItem("rememberedEmail", formData.email);
+        localStorage.setItem("rememberedPassword", formData.password);
+      } else {
+        localStorage.removeItem("rememberedEmail");
+        localStorage.removeItem("rememberedPassword");
+      }
+
       setTimeout(() => {
         navigate("/dashboard");
       }, 1500);
@@ -75,6 +99,19 @@ function Login() {
               value={formData.password}
               onChange={handleChange}
             />
+
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "8px 0" }}>
+              <input
+                type="checkbox"
+                id="rememberMe"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                style={{ width: "auto" }}
+              />
+              <label htmlFor="rememberMe" style={{ fontSize: "0.9rem", cursor: "pointer" }}>
+                Remember me
+              </label>
+            </div>
 
             <div className="forgot-link">
               <Link to="/forgot-password">Forgot password?</Link>

@@ -6,6 +6,14 @@ import Button from "../../components/Button";
 import { registerUser } from "../../services/api";
 import "./register.css";
 
+const PASSWORD_RULES = [
+  { key: "length", label: "At least 8 characters", test: (pw) => pw.length >= 8 },
+  { key: "uppercase", label: "1 uppercase letter", test: (pw) => /[A-Z]/.test(pw) },
+  { key: "lowercase", label: "1 lowercase letter", test: (pw) => /[a-z]/.test(pw) },
+  { key: "number", label: "1 number", test: (pw) => /[0-9]/.test(pw) },
+  { key: "special", label: "1 special character (!@#$%^&*()_+-=[]{};:'\"|,.<>/?)", test: (pw) => /[!@#$%^&*()_+\-=[\]{};:'"|,.<>/?]/.test(pw) },
+];
+
 function Register() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -16,6 +24,8 @@ function Register() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  const unmetRules = PASSWORD_RULES.filter((rule) => !rule.test(formData.password));
 
   const handleChange = (e) => {
     setFormData({
@@ -84,9 +94,32 @@ function Register() {
               onChange={handleChange}
             />
 
-            <div className="password-hint">
-              <p>Must be at least 8 characters with uppercase, lowercase, number & special character</p>
-            </div>
+            {formData.password.length > 0 && unmetRules.length > 0 && (
+              <div className="password-hint">
+                <p style={{ marginBottom: "4px", fontWeight: 600 }}>Still needed:</p>
+                <ul style={{ margin: 0, paddingLeft: "20px" }}>
+                  {unmetRules.map((rule) => (
+                    <li key={rule.key} style={{ color: "#c0392b", fontSize: "0.85rem" }}>
+                      {rule.label}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {formData.password.length > 0 && unmetRules.length === 0 && (
+              <div className="password-hint">
+                <p style={{ color: "#27ae60", fontSize: "0.85rem", margin: 0 }}>
+                  ✓ Password meets all requirements
+                </p>
+              </div>
+            )}
+
+            {formData.password.length === 0 && (
+              <div className="password-hint">
+                <p>Must be at least 8 characters with uppercase, lowercase, number & special character</p>
+              </div>
+            )}
 
             <Button text={loading ? "Creating Account..." : "Create Account"} type="submit" disabled={loading} />
           </form>
