@@ -3,7 +3,7 @@ import Editor from "@monaco-editor/react";
 import axios from "axios";
 
 // Change this if your backend runs on a different port/host
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = "/api";
 
 export default function CodeEditor() {
   const editorRef = useRef(null);
