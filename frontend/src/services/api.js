@@ -71,7 +71,7 @@ export const getProfile = async (token) => {
 
 export const uploadCV = async (token, formData) => {
   try {
-    const response = await axios.post(`${API_URL}/cv/upload`, formData, {
+    const response = await api.post("/cv/upload", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
         Authorization: `Bearer ${token}`,
@@ -86,11 +86,11 @@ export const uploadCV = async (token, formData) => {
 
 export const extractCVData = async (token) => {
   try {
-    const response = await axios.post(`${API_URL}/cv/extract`, {}, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.post(
+      "/cv/extract",
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
     return response.data;
   } catch (error) {
     if (error.response) return error.response.data;
@@ -100,10 +100,8 @@ export const extractCVData = async (token) => {
 
 export const getCVData = async (token) => {
   try {
-    const response = await axios.get(`${API_URL}/cv/data`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    const response = await api.get("/cv/data", {
+      headers: { Authorization: `Bearer ${token}` },
     });
     return response.data;
   } catch (error) {
@@ -118,14 +116,10 @@ export const getCVData = async (token) => {
 
 export const generateAIAnswer = async (token, fieldType) => {
   try {
-    const response = await axios.post(
-      `${API_URL}/ai/generate-answer`,
+    const response = await api.post(
+      "/ai/generate-answer",
       { fieldType },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      { headers: { Authorization: `Bearer ${token}` } }
     );
     return response.data;
   } catch (error) {
@@ -140,15 +134,9 @@ export const generateAIAnswer = async (token, fieldType) => {
 
 export const submitApplication = async (token, applicationData) => {
   try {
-    const response = await axios.post(
-      `${API_URL}/application/submit`,
-      applicationData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const response = await api.post("/application/submit", applicationData, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
     return response.data;
   } catch (error) {
     if (error.response) return error.response.data;
@@ -162,10 +150,7 @@ export const submitApplication = async (token, applicationData) => {
 
 export const adminLogin = async (username, password) => {
   try {
-    const response = await axios.post(`${API_URL}/admin/login`, {
-      username,
-      password,
-    });
+    const response = await api.post("/admin/login", { username, password });
     return response.data;
   } catch (error) {
     if (error.response) return error.response.data;
@@ -175,10 +160,8 @@ export const adminLogin = async (username, password) => {
 
 export const getAllApplications = async (adminToken) => {
   try {
-    const response = await axios.get(`${API_URL}/admin/applications`, {
-      headers: {
-        Authorization: `Bearer ${adminToken}`,
-      },
+    const response = await api.get("/admin/applications", {
+      headers: { Authorization: `Bearer ${adminToken}` },
     });
     return response.data;
   } catch (error) {
@@ -189,10 +172,8 @@ export const getAllApplications = async (adminToken) => {
 
 export const getApplicationById = async (adminToken, id) => {
   try {
-    const response = await axios.get(`${API_URL}/admin/applications/${id}`, {
-      headers: {
-        Authorization: `Bearer ${adminToken}`,
-      },
+    const response = await api.get(`/admin/applications/${id}`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
     });
     return response.data;
   } catch (error) {
@@ -203,10 +184,8 @@ export const getApplicationById = async (adminToken, id) => {
 
 export const updateApplication = async (adminToken, id, data) => {
   try {
-    const response = await axios.put(`${API_URL}/admin/applications/${id}`, data, {
-      headers: {
-        Authorization: `Bearer ${adminToken}`,
-      },
+    const response = await api.put(`/admin/applications/${id}`, data, {
+      headers: { Authorization: `Bearer ${adminToken}` },
     });
     return response.data;
   } catch (error) {
