@@ -14,6 +14,8 @@ const PASSWORD_RULES = [
   { key: "special", label: "1 special character (!@#$%^&*()_+-=[]{};:'\"|,.<>/?)", test: (pw) => /[!@#$%^&*()_+\-=[\]{};:'"|,.<>/?]/.test(pw) },
 ];
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function Register() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -27,6 +29,9 @@ function Register() {
 
   const unmetRules = PASSWORD_RULES.filter((rule) => !rule.test(formData.password));
   const isPasswordValid = formData.password.length > 0 && unmetRules.length === 0;
+  const isNameValid = formData.fullName.trim().length > 0;
+  const isEmailValid = EMAIL_REGEX.test(formData.email.trim());
+  const isFormValid = isNameValid && isEmailValid && isPasswordValid;
 
   const handleChange = (e) => {
     setFormData({
@@ -86,6 +91,14 @@ function Register() {
               onChange={handleChange}
             />
 
+            {formData.email.length > 0 && !isEmailValid && (
+              <div className="password-hint">
+                <p style={{ color: "#c0392b", fontSize: "0.85rem", margin: 0 }}>
+                  Enter a valid email address (e.g. name@example.com)
+                </p>
+              </div>
+            )}
+
             <InputField
               label="Password"
               type="password"
@@ -125,7 +138,7 @@ function Register() {
             <Button
               text={loading ? "Creating Account..." : "Create Account"}
               type="submit"
-              disabled={loading || !isPasswordValid}
+              disabled={loading || !isFormValid}
             />
           </form>
 
