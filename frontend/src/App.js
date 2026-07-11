@@ -10,6 +10,7 @@ import ApplicationForm from "./pages/applicationform/applicationform";
 import Admin from "./pages/admin/Admin";
 import EditApplication from "./pages/admin/EditApplication";
 import CodeEditor from "./pages/CodeEditor";
+import Layout from "./components/Layout";
 
 function App() {
   return (
@@ -19,12 +20,42 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/upload-cv" element={<UploadCV />} />
-        <Route path="/application-form" element={<ApplicationForm />} />
+
+        <Route
+          path="/dashboard"
+          element={
+            <Layout title="Dashboard">
+              <Dashboard />
+            </Layout>
+          }
+        />
+        <Route
+          path="/upload-cv"
+          element={
+            <Layout title="Upload CV">
+              <UploadCV />
+            </Layout>
+          }
+        />
+        <Route
+          path="/application-form"
+          element={
+            <Layout title="Application Form">
+              <ApplicationForm />
+            </Layout>
+          }
+        />
+        <Route
+          path="/code-editor"
+          element={
+            <Layout title="Code Editor">
+              <CodeEditor />
+            </Layout>
+          }
+        />
+
         <Route path="/admin" element={<Admin />} />
         <Route path="/admin/applications/:id/edit" element={<EditApplication />} />
-        <Route path="/code-editor" element={<CodeEditor />} />
       </Routes>
     </BrowserRouter>
   );

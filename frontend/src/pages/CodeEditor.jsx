@@ -74,7 +74,7 @@ export default function CodeEditor() {
   return (
     <div
       style={{
-        height: "100vh",
+        height: "100%",
         display: "flex",
         flexDirection: "column",
         background: "#1e1e1e",
@@ -116,7 +116,7 @@ export default function CodeEditor() {
       </div>
 
       <Editor
-        height="calc(100vh - 42px)"
+        height="calc(100% - 42px)"
         theme="vs-dark"
         language={language}
         defaultValue={`function greet(name) {\n  console.log("Hello, " + name)\n}`}
