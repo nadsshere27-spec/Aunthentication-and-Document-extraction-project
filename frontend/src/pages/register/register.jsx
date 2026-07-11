@@ -26,6 +26,7 @@ function Register() {
   const [success, setSuccess] = useState("");
 
   const unmetRules = PASSWORD_RULES.filter((rule) => !rule.test(formData.password));
+  const isPasswordValid = formData.password.length > 0 && unmetRules.length === 0;
 
   const handleChange = (e) => {
     setFormData({
@@ -121,7 +122,11 @@ function Register() {
               </div>
             )}
 
-            <Button text={loading ? "Creating Account..." : "Create Account"} type="submit" disabled={loading} />
+            <Button
+              text={loading ? "Creating Account..." : "Create Account"}
+              type="submit"
+              disabled={loading || !isPasswordValid}
+            />
           </form>
 
           <div className="login-text">
