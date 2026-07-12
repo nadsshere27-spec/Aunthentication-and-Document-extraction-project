@@ -169,9 +169,47 @@ const extractDOC = async (dataBuffer) => {
     return '';
   }
 };
+
+// ============================================
+// SECTION-BASED PARSING (NEW)
+// Finds ALL-CAPS resume section headers (SUMMARY, EDUCATION, SKILLS,
+// EXPERIENCE, PROJECTS, etc.) inside the extracted text and slices the
+// text between them, so "Education" only gets the Education section's
+// content instead of the whole CV.
+// ============================================
+const SECTION_HEADER_PATTERN =
+  /\b(SUMMARY|OBJECTIVE|PROFILE|EDUCATION|SKILLS|TECHNICAL SKILLS|EXPERIENCE|WORK EXPERIENCE|PROFESSIONAL EXPERIENCE|EMPLOYMENT HISTORY|PROJECTS|CERTIFICATIONS|CERTIFICATES|LANGUAGES|CONTACT|CONTACT INFORMATION)\b/g;
+
+const cleanSectionText = (raw) => {
+  return raw
+    .replace(/[◇•▪●○]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .substring(0, 400);
+};
+
+const extractSections = (text) => {
+  const matches = [];
+  let match;
+  const regex = new RegExp(SECTION_HEADER_PATTERN);
+  while ((match = regex.exec(text)) !== null) {
+    matches.push({ name: match[1].toLowerCase(), index: match.index, length: match[0].length });
+  }
+
+  const sections = {};
+  for (let i = 0; i < matches.length; i++) {
+    const current = matches[i];
+    const next = matches[i + 1];
+    const start = current.index + current.length;
+    const end = next ? next.index : text.length;
+    sections[current.name] = cleanSectionText(text.substring(start, end));
+  }
+
+  return sections;
+};
  
 // ============================================
-// IMPROVED INFORMATION EXTRACTION (UNCHANGED)
+// IMPROVED INFORMATION EXTRACTION
 // ============================================
 const extractInfo = (text) => {
   console.log('🔍 Starting information extraction...');
@@ -187,6 +225,9 @@ const extractInfo = (text) => {
     experience: '',
     rawText: text.substring(0, 1000)
   };
+
+  const sections = extractSections(text);
+  console.log('🔍 Detected sections:', Object.keys(sections));
  
   const namePatterns = [
     /(?:Name|Full Name|Applicant Name|Student Name)[:]\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})/i,
@@ -260,37 +301,55 @@ const extractInfo = (text) => {
     extractedData.skills = foundSkills;
     console.log('✅ Skills found:', foundSkills.join(', '));
   }
- 
-  const educationKeywords = [
-    'Bachelor', 'Master', 'BS', 'MS', 'BSc', 'MSc',
-    'BCS', 'MCS', 'Software Engineering', 'Computer Science',
-    'B.Tech', 'M.Tech', 'PhD', 'MBA'
-  ];
- 
-  educationKeywords.forEach(edu => {
-    if (text.toLowerCase().includes(edu.toLowerCase())) {
-      const sentences = text.split(/[.!?]/);
-      for (let sentence of sentences) {
-        if (sentence.toLowerCase().includes(edu.toLowerCase())) {
-          extractedData.education = sentence.trim();
-          console.log('✅ Education found:', extractedData.education);
-          break;
+
+  // ---- EDUCATION: prefer the actual EDUCATION section ----
+  if (sections['education']) {
+    extractedData.education = sections['education'];
+    console.log('✅ Education found (section-based):', extractedData.education);
+  } else {
+    const educationKeywords = [
+      'Bachelor', 'Master', 'BS', 'MS', 'BSc', 'MSc',
+      'BCS', 'MCS', 'Software Engineering', 'Computer Science',
+      'B.Tech', 'M.Tech', 'PhD', 'MBA'
+    ];
+
+    educationKeywords.forEach(edu => {
+      if (text.toLowerCase().includes(edu.toLowerCase())) {
+        const sentences = text.split(/[.!?]/);
+        for (let sentence of sentences) {
+          if (sentence.toLowerCase().includes(edu.toLowerCase())) {
+            extractedData.education = sentence.trim();
+            console.log('✅ Education found (fallback):', extractedData.education);
+            break;
+          }
         }
       }
-    }
-  });
- 
-  const experiencePatterns = [
-    /(?:Experience|Work Experience|Professional Experience)[:]\s*([^\n]{0,200})/i,
-    /(\d+)\s*(?:years|yrs)\s*(?:of)?\s*(?:experience)/i
-  ];
- 
-  for (const pattern of experiencePatterns) {
-    const match = text.match(pattern);
-    if (match) {
-      extractedData.experience = match[1] || match[0];
-      console.log('✅ Experience found:', extractedData.experience);
-      break;
+    });
+  }
+
+  // ---- EXPERIENCE: prefer the actual EXPERIENCE section ----
+  const experienceSection =
+    sections['work experience'] ||
+    sections['experience'] ||
+    sections['professional experience'] ||
+    sections['employment history'];
+
+  if (experienceSection) {
+    extractedData.experience = experienceSection;
+    console.log('✅ Experience found (section-based):', extractedData.experience);
+  } else {
+    const experiencePatterns = [
+      /(?:Experience|Work Experience|Professional Experience)[:]\s*([^\n]{0,200})/i,
+      /(\d+)\s*(?:years|yrs)\s*(?:of)?\s*(?:experience)/i
+    ];
+
+    for (const pattern of experiencePatterns) {
+      const match = text.match(pattern);
+      if (match) {
+        extractedData.experience = match[1] || match[0];
+        console.log('✅ Experience found (fallback):', extractedData.experience);
+        break;
+      }
     }
   }
  
@@ -501,4 +560,3 @@ module.exports = {
   extractCVData,
   getCVData
 };
- 

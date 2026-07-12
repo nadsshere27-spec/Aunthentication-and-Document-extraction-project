@@ -194,4 +194,35 @@ export const updateApplication = async (adminToken, id, data) => {
   }
 };
 
+// ============================================
+// PROFILE APIs
+// ============================================
+
+export const getMyProfile = async (token) => {
+  try {
+    const response = await api.get("/profile", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response) return error.response.data;
+    return { success: false, message: error.message || "Network error" };
+  }
+};
+
+export const uploadProfilePicture = async (token, formData) => {
+  try {
+    const response = await api.post("/profile/picture", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response) return error.response.data;
+    return { success: false, message: error.message || "Network error" };
+  }
+};
+
 export default api;

@@ -10,6 +10,7 @@ import ApplicationForm from "./pages/applicationform/applicationform";
 import Admin from "./pages/admin/Admin";
 import EditApplication from "./pages/admin/EditApplication";
 import CodeEditor from "./pages/CodeEditor";
+import Profile from "./pages/profile/Profile";
 import Layout from "./components/Layout";
 
 function App() {
@@ -50,6 +51,14 @@ function App() {
           element={
             <Layout title="Code Editor">
               <CodeEditor />
+            </Layout>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <Layout title="My Profile">
+              <Profile />
             </Layout>
           }
         />

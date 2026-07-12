@@ -33,6 +33,10 @@ const userSchema = new mongoose.Schema({
   resetPasswordExpires: {
     type: Date
   },
+  profilePicture: {
+    type: String,
+    default: ''
+  },
   cvData: {
     extractedInfo: {
       name: { type: String, default: '' },

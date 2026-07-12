@@ -8,9 +8,16 @@ import "./Layout.css";
 function Layout({ title, children }) {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState(null);
   const menuRef = useRef(null);
 
   useEffect(() => {
+    const cachedUser = localStorage.getItem("user");
+    if (cachedUser) {
+      const parsed = JSON.parse(cachedUser);
+      setAvatarUrl(parsed.profilePicture || null);
+    }
+
     const token = localStorage.getItem("token");
     if (!token) {
       navigate("/");
@@ -21,6 +28,7 @@ function Layout({ title, children }) {
       const result = await getProfile(token);
       if (result.success) {
         localStorage.setItem("user", JSON.stringify(result.user));
+        setAvatarUrl(result.user.profilePicture || null);
       } else {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
@@ -47,11 +55,6 @@ function Layout({ title, children }) {
     navigate("/");
   };
 
-  const handleProfileClick = () => {
-    setMenuOpen(false);
-    alert("Profile page coming soon!");
-  };
-
   return (
     <div className="app-layout">
       <Sidebar />
@@ -65,14 +68,22 @@ function Layout({ title, children }) {
               onClick={() => setMenuOpen((prev) => !prev)}
               aria-label="Profile menu"
             >
-              <FaUserCircle size={30} />
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Profile" className="profile-avatar-img" />
+              ) : (
+                <FaUserCircle size={30} />
+              )}
             </button>
 
             {menuOpen && (
               <div className="profile-dropdown">
-                <button className="dropdown-item" onClick={handleProfileClick}>
+                <Link
+                  to="/profile"
+                  className="dropdown-item"
+                  onClick={() => setMenuOpen(false)}
+                >
                   My Profile
-                </button>
+                </Link>
                 <Link
                   to="/admin"
                   className="dropdown-item"

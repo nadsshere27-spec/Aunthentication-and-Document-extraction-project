@@ -1,0 +1,98 @@
+.profile-page {
+  padding: 20px 10px 40px;
+}
+
+.profile-hero {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.profile-avatar-wrap {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 14px;
+}
+
+.profile-avatar {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #ffffff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+}
+
+.profile-avatar-edit {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #5E8265;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.profile-avatar-edit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.profile-hero h1 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #2D3436;
+  margin: 4px 0 2px;
+}
+
+.profile-email {
+  font-size: 14px;
+  color: #6B7280;
+  margin: 0;
+}
+
+.profile-uploading-text {
+  font-size: 13px;
+  color: #5E8265;
+  margin-top: 6px;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.profile-grid h3 {
+  font-size: 17px;
+  color: #2D3436;
+  margin: 0 0 12px 0;
+}
+
+.profile-text {
+  font-size: 14px;
+  color: #4B5A4C;
+  line-height: 1.6;
+  margin: 4px 0;
+}
+
+.profile-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.profile-skill-chip {
+  background: #EEF5EE;
+  color: #4B5A4C;
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 20px;
+}
