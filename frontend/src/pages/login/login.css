@@ -2,6 +2,12 @@
   min-height: 100vh;
   background: #F7F8F5;
   display: flex;
+  flex-direction: column;
+}
+
+.login-body {
+  flex: 1;
+  display: flex;
   justify-content: center;
   align-items: center;
   padding: 30px;
@@ -34,7 +40,6 @@
   margin-top: 5px;
 }
 
-/* Error Message */
 .error-message {
   background: #FEE2E2;
   color: #DC2626;
@@ -45,7 +50,6 @@
   border: 1px solid #FECACA;
 }
 
-/* Success Message */
 .success-message {
   background: #D1FAE5;
   color: #065F46;
@@ -89,9 +93,8 @@
   text-decoration: underline;
 }
 
-/* Mobile Responsive */
 @media (max-width: 768px) {
-  .login-page {
+  .login-body {
     padding: 20px;
   }
 
@@ -109,7 +112,7 @@
 }
 
 @media (max-width: 480px) {
-  .login-page {
+  .login-body {
     padding: 16px;
   }
 

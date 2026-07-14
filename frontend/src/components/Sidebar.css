@@ -55,8 +55,11 @@
   }
 
   .sidebar-brand {
-    display: none;
-  }
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 0 10px;
+}
 
   .sidebar-nav {
     flex-direction: row;
