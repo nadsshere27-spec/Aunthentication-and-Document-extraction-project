@@ -4,6 +4,7 @@ import Card from "../../components/Card";
 import { getMyProfile, uploadProfilePicture, updateProfile } from "../../services/api";
 import { FaUserCircle, FaCamera, FaPen } from "react-icons/fa";
 import "./profile.css";
+import Loader from "../../components/Loader";
 
 function Profile() {
   const navigate = useNavigate();
@@ -103,7 +104,7 @@ function Profile() {
   if (loading) {
     return (
       <div className="profile-page">
-        <p>Loading...</p>
+        <Loader />
       </div>
     );
   }

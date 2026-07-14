@@ -5,6 +5,7 @@ import InputField from "../../components/InputField";
 import Button from "../../components/Button";
 import { getCVData, generateAIAnswer, submitApplication } from "../../services/api";
 import "./applicationform.css";
+import Loader from "../../components/Loader";
 
 function ApplicationForm() {
   const navigate = useNavigate();
@@ -98,14 +99,10 @@ function ApplicationForm() {
     }
   };
 
-  if (loading) {
+ if (loading) {
     return (
       <div className="form-page">
-        <div className="form-container">
-          <div className="form-header">
-            <h1>Loading...</h1>
-          </div>
-        </div>
+        <Loader />
       </div>
     );
   }
