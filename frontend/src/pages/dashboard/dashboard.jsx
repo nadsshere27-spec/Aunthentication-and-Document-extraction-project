@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { getProfile } from "../../services/api";
+import { getProfile, getDashboardStats } from "../../services/api";
 import "./dashboard.css";
 
 function Dashboard() {
   const [user, setUser] = useState(null);
+  const [stats, setStats] = useState({ profileCompletion: 0, applicationsCount: 0 });
+  const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -16,7 +18,16 @@ function Dashboard() {
       }
     };
 
+    const fetchStats = async () => {
+      const result = await getDashboardStats(token);
+      if (result.success) {
+        setStats(result.stats);
+      }
+      setLoadingStats(false);
+    };
+
     fetchProfile();
+    fetchStats();
   }, []);
 
   return (
@@ -30,11 +41,11 @@ function Dashboard() {
         <div className="dashboard-stats">
           <div className="stat-card">
             <p className="stat-label">Profile completion</p>
-            <p className="stat-value">80%</p>
+            <p className="stat-value">{loadingStats ? "..." : `${stats.profileCompletion}%`}</p>
           </div>
           <div className="stat-card">
             <p className="stat-label">Applications</p>
-            <p className="stat-value">1</p>
+            <p className="stat-value">{loadingStats ? "..." : stats.applicationsCount}</p>
           </div>
           <div className="stat-card">
             <p className="stat-label">Resume score</p>

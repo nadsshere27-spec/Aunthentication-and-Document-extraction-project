@@ -37,6 +37,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  profileOverrides: {
+    phone: { type: String, default: '' },
+    age: { type: Number, default: null },
+    skills: { type: [String], default: [] },
+    education: { type: String, default: '' },
+    experience: { type: String, default: '' },
+    about: { type: String, default: '' }
+  },
   cvData: {
     extractedInfo: {
       name: { type: String, default: '' },

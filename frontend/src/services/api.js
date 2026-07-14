@@ -209,7 +209,17 @@ export const getMyProfile = async (token) => {
     return { success: false, message: error.message || "Network error" };
   }
 };
-
+export const updateProfile = async (token, data) => {
+  try {
+    const response = await api.put("/profile", data, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response) return error.response.data;
+    return { success: false, message: error.message || "Network error" };
+  }
+};
 export const uploadProfilePicture = async (token, formData) => {
   try {
     const response = await api.post("/profile/picture", formData, {
@@ -224,5 +234,15 @@ export const uploadProfilePicture = async (token, formData) => {
     return { success: false, message: error.message || "Network error" };
   }
 };
-
+export const getDashboardStats = async (token) => {
+  try {
+    const response = await api.get("/profile/stats", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response) return error.response.data;
+    return { success: false, message: error.message || "Network error" };
+  }
+};
 export default api;

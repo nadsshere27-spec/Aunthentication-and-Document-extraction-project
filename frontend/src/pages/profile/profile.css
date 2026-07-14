@@ -1,3 +1,6 @@
+/* ============================================
+   PAGE / HERO
+   ============================================ */
 .profile-page {
   padding: 20px 10px 40px;
 }
@@ -9,33 +12,38 @@
 
 .profile-avatar-wrap {
   position: relative;
-  display: inline-block;
-  margin-bottom: 14px;
+  width: 130px;
+  height: 130px;
+  margin: 0 auto 16px;
 }
 
 .profile-avatar {
-  width: 110px;
-  height: 110px;
+  width: 130px;
+  height: 130px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid #ffffff;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  border: 3px solid #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 
 .profile-avatar-edit {
   position: absolute;
-  bottom: 0;
-  right: 0;
+  bottom: 4px;
+  right: 4px;
   width: 32px;
   height: 32px;
   border-radius: 50%;
   background: #5E8265;
-  color: #ffffff;
-  border: 2px solid #ffffff;
+  color: #fff;
+  border: 2px solid #fff;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+}
+
+.profile-avatar-edit:hover {
+  background: #4B6B52;
 }
 
 .profile-avatar-edit:disabled {
@@ -44,43 +52,45 @@
 }
 
 .profile-hero h1 {
-  font-size: 24px;
-  font-weight: 600;
-  color: #2D3436;
-  margin: 4px 0 2px;
+  margin: 0 0 4px;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1F2A22;
 }
 
 .profile-email {
-  font-size: 14px;
-  color: #6B7280;
   margin: 0;
+  color: #6B7280;
+  font-size: 15px;
 }
 
 .profile-uploading-text {
+  margin-top: 8px;
   font-size: 13px;
   color: #5E8265;
-  margin-top: 6px;
 }
 
+/* ============================================
+   GRID / CARDS
+   ============================================ */
 .profile-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
-  max-width: 1000px;
-  margin: 0 auto;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  align-items: start;
 }
 
-.profile-grid h3 {
-  font-size: 17px;
-  color: #2D3436;
-  margin: 0 0 12px 0;
+@media (max-width: 900px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .profile-text {
-  font-size: 14px;
-  color: #4B5A4C;
+  font-size: 14.5px;
   line-height: 1.6;
-  margin: 4px 0;
+  color: #3E473F;
+  margin: 0 0 6px;
 }
 
 .profile-skills {
@@ -90,9 +100,108 @@
 }
 
 .profile-skill-chip {
-  background: #EEF5EE;
-  color: #4B5A4C;
-  font-size: 13px;
+  background: #F0F4EF;
+  color: #3E5A41;
+  border: 1px solid #DDEADB;
   padding: 6px 12px;
-  border-radius: 20px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ============================================
+   CARD HEADER + EDIT ICON
+   ============================================ */
+.profile-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.profile-card-header h3 {
+  margin: 0;
+}
+
+.profile-edit-btn {
+  background: #F0F4EF;
+  border: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  color: #5E8265;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-edit-btn:hover {
+  background: #DDEADB;
+}
+
+/* ============================================
+   INLINE EDIT FORM
+   ============================================ */
+.profile-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profile-edit-form label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #4B5A4C;
+  margin-top: 4px;
+}
+
+.profile-edit-form textarea,
+.profile-edit-form input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #D7DDD8;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.profile-edit-form textarea:focus,
+.profile-edit-form input:focus {
+  outline: none;
+  border-color: #5E8265;
+}
+
+.profile-edit-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.profile-save-btn {
+  background: #5E8265;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.profile-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.profile-cancel-btn {
+  background: none;
+  color: #6B7280;
+  border: 1px solid #D7DDD8;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
 }

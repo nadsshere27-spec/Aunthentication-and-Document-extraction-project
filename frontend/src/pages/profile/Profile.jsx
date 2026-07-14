@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Card from "../../components/Card";
-import { getMyProfile, uploadProfilePicture } from "../../services/api";
-import { FaUserCircle, FaCamera } from "react-icons/fa";
+import { getMyProfile, uploadProfilePicture, updateProfile } from "../../services/api";
+import { FaUserCircle, FaCamera, FaPen } from "react-icons/fa";
 import "./profile.css";
 
 function Profile() {
@@ -10,6 +10,9 @@ function Profile() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [editingCard, setEditingCard] = useState(null); // "about" | "contact" | "skills" | null
+  const [saving, setSaving] = useState(false);
+  const [draft, setDraft] = useState({});
   const fileInputRef = useRef(null);
 
   const loadProfile = async (token) => {
@@ -48,6 +51,53 @@ function Profile() {
     }
 
     setUploading(false);
+  };
+
+  const startEdit = (card) => {
+    if (card === "about") {
+      setDraft({ about: profile.about || "" });
+    } else if (card === "contact") {
+      setDraft({ phone: profile.phone || "", age: profile.age || "" });
+    } else if (card === "skills") {
+      setDraft({ skills: (profile.skills || []).join(", ") });
+    }
+    setEditingCard(card);
+  };
+
+  const cancelEdit = () => {
+    setEditingCard(null);
+    setDraft({});
+  };
+
+  const saveEdit = async () => {
+    const token = localStorage.getItem("token");
+    setSaving(true);
+
+    let payload = {};
+    if (editingCard === "about") {
+      payload = { about: draft.about };
+    } else if (editingCard === "contact") {
+      payload = { phone: draft.phone, age: draft.age ? Number(draft.age) : null };
+    } else if (editingCard === "skills") {
+      payload = {
+        skills: draft.skills
+          .split(",")
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0)
+      };
+    }
+
+    const result = await updateProfile(token, payload);
+
+    if (result.success) {
+      setProfile(result.profile);
+      setEditingCard(null);
+      setDraft({});
+    } else {
+      alert(result.message || "Failed to update profile");
+    }
+
+    setSaving(false);
   };
 
   if (loading) {
@@ -90,21 +140,108 @@ function Profile() {
 
       <div className="profile-grid">
         <Card>
-          <h3>About</h3>
-          <p className="profile-text">
-            {profile?.about || "No bio yet — this fills in automatically once you submit an application."}
-          </p>
+          <div className="profile-card-header">
+            <h3>About</h3>
+            {editingCard !== "about" && (
+              <button className="profile-edit-btn" onClick={() => startEdit("about")} aria-label="Edit About">
+                <FaPen size={12} />
+              </button>
+            )}
+          </div>
+
+          {editingCard === "about" ? (
+            <div className="profile-edit-form">
+              <textarea
+                rows="5"
+                value={draft.about}
+                onChange={(e) => setDraft({ ...draft, about: e.target.value })}
+              />
+              <div className="profile-edit-actions">
+                <button className="profile-save-btn" onClick={saveEdit} disabled={saving}>
+                  {saving ? "Saving..." : "Save"}
+                </button>
+                <button className="profile-cancel-btn" onClick={cancelEdit} disabled={saving}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="profile-text">
+              {profile?.about || "No bio yet — this fills in automatically once you submit an application."}
+            </p>
+          )}
         </Card>
 
         <Card>
-          <h3>Contact</h3>
-          <p className="profile-text"><strong>Phone:</strong> {profile?.phone || "Not provided"}</p>
-          <p className="profile-text"><strong>Age:</strong> {profile?.age || "Not provided"}</p>
+          <div className="profile-card-header">
+            <h3>Contact</h3>
+            {editingCard !== "contact" && (
+              <button className="profile-edit-btn" onClick={() => startEdit("contact")} aria-label="Edit Contact">
+                <FaPen size={12} />
+              </button>
+            )}
+          </div>
+
+          {editingCard === "contact" ? (
+            <div className="profile-edit-form">
+              <label>Phone</label>
+              <input
+                type="text"
+                value={draft.phone}
+                onChange={(e) => setDraft({ ...draft, phone: e.target.value })}
+              />
+              <label>Age</label>
+              <input
+                type="number"
+                value={draft.age}
+                onChange={(e) => setDraft({ ...draft, age: e.target.value })}
+              />
+              <div className="profile-edit-actions">
+                <button className="profile-save-btn" onClick={saveEdit} disabled={saving}>
+                  {saving ? "Saving..." : "Save"}
+                </button>
+                <button className="profile-cancel-btn" onClick={cancelEdit} disabled={saving}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <p className="profile-text"><strong>Phone:</strong> {profile?.phone || "Not provided"}</p>
+              <p className="profile-text"><strong>Age:</strong> {profile?.age || "Not provided"}</p>
+            </>
+          )}
         </Card>
 
         <Card>
-          <h3>Skills</h3>
-          {profile?.skills && profile.skills.length > 0 ? (
+          <div className="profile-card-header">
+            <h3>Skills</h3>
+            {editingCard !== "skills" && (
+              <button className="profile-edit-btn" onClick={() => startEdit("skills")} aria-label="Edit Skills">
+                <FaPen size={12} />
+              </button>
+            )}
+          </div>
+
+          {editingCard === "skills" ? (
+            <div className="profile-edit-form">
+              <label>Skills (comma-separated)</label>
+              <input
+                type="text"
+                value={draft.skills}
+                onChange={(e) => setDraft({ ...draft, skills: e.target.value })}
+                placeholder="React, Node.js, MongoDB"
+              />
+              <div className="profile-edit-actions">
+                <button className="profile-save-btn" onClick={saveEdit} disabled={saving}>
+                  {saving ? "Saving..." : "Save"}
+                </button>
+                <button className="profile-cancel-btn" onClick={cancelEdit} disabled={saving}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : profile?.skills && profile.skills.length > 0 ? (
             <div className="profile-skills">
               {profile.skills.map((skill) => (
                 <span className="profile-skill-chip" key={skill}>{skill}</span>

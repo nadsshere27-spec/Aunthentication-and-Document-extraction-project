@@ -4,7 +4,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
-const portfinder = require('portfinder');
 
 const app = express();
 
@@ -47,11 +46,6 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-app.get('/test-direct', (req, res) => {
-  console.log('🎯 DIRECT TEST HIT!');
-  res.json({ ok: true, message: 'Direct test works!' });
-});
-
 app.use((req, res) => {
   res.status(404).json({
     message: 'Route not found'
@@ -65,20 +59,16 @@ app.use((err, req, res, next) => {
   });
 });
 
+const PORT = 5000;
+
 const startServer = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log("MongoDB Atlas connected successfully");
 
-    const PORT = await portfinder.getPortPromise({
-      port: 5000,
-      stopPort: 5010
-    });
-
     app.listen(PORT, () => {
       console.log(`✅ Server running on port ${PORT}`);
       console.log(`✅ Health check: http://localhost:${PORT}/api/health`);
-      console.log(`✅ IMPORTANT: Update frontend api.js with port ${PORT}`);
     });
   } catch (error) {
     console.error('❌ Server Error:', error);
