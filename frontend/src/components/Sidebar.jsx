@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { FaTachometerAlt, FaFileUpload, FaFileAlt, FaCode } from "react-icons/fa";
+import { FaTachometerAlt, FaFileUpload, FaFileAlt, FaCode, FaExchangeAlt } from "react-icons/fa";
 import Logo from "./Logo";
 import "./Sidebar.css";
 
@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { to: "/upload-cv", label: "Upload CV", icon: FaFileUpload },
   { to: "/application-form", label: "Application", icon: FaFileAlt },
   { to: "/code-editor", label: "Code Editor", icon: FaCode },
+  { to: "/compare", label: "Compare CVs", icon: FaExchangeAlt },
 ];
 
 function Sidebar() {

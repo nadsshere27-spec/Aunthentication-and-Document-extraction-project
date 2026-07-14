@@ -11,6 +11,7 @@ import Admin from "./pages/admin/Admin";
 import EditApplication from "./pages/admin/EditApplication";
 import CodeEditor from "./pages/CodeEditor";
 import Profile from "./pages/profile/Profile";
+import Compare from "./pages/compare/Compare";
 import Layout from "./components/Layout";
 
 function App() {
@@ -62,7 +63,14 @@ function App() {
             </Layout>
           }
         />
-
+<Route
+          path="/compare"
+          element={
+            <Layout title="Compare documents" hideSidebar>
+              <Compare />
+            </Layout>
+          }
+        />
         <Route path="/admin" element={<Admin />} />
         <Route path="/admin/applications/:id/edit" element={<EditApplication />} />
       </Routes>

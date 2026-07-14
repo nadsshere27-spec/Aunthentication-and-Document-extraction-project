@@ -193,7 +193,20 @@ export const updateApplication = async (adminToken, id, data) => {
     return { success: false, message: error.message || "Network error" };
   }
 };
-
+export const compareDocuments = async (token, formData) => {
+  try {
+    const response = await api.post("/compare", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response) return error.response.data;
+    return { success: false, message: error.message || "Network error" };
+  }
+};
 // ============================================
 // PROFILE APIs
 // ============================================

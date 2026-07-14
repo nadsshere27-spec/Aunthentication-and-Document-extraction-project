@@ -5,7 +5,7 @@ import { getProfile } from "../services/api";
 import { FaUserCircle } from "react-icons/fa";
 import "./Layout.css";
 
-function Layout({ title, children }) {
+function Layout({ title, children, hideSidebar = false }) {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(null);
@@ -57,7 +57,7 @@ function Layout({ title, children }) {
 
   return (
     <div className="app-layout">
-      <Sidebar />
+      {!hideSidebar && <Sidebar />}
       <div className="app-main">
         <div className="app-topbar">
           <span className="app-topbar-title">{title}</span>
