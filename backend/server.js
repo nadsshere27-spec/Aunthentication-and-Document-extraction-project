@@ -33,6 +33,16 @@ console.log('✅ Admin Routes loaded successfully!');
 console.log('✅ Profile Routes loaded successfully!');
 console.log('✅ Compare Routes loaded successfully!');
 
+// ===== DEBUG: Check what each require() actually returns =====
+console.log('auth type:', typeof authRoutes, authRoutes);
+console.log('cv type:', typeof cvRoutes, cvRoutes);
+console.log('ai type:', typeof aiRoutes, aiRoutes);
+console.log('application type:', typeof applicationRoutes, applicationRoutes);
+console.log('admin type:', typeof adminRoutes, adminRoutes);
+console.log('profile type:', typeof profileRoutes, profileRoutes);
+console.log('compare type:', typeof compareRoutes, compareRoutes);
+// ============================================================
+
 app.use('/api/auth', authRoutes);
 app.use('/api/cv', cvRoutes);
 app.use('/api/ai', aiRoutes);
@@ -67,7 +77,7 @@ const PORT = 5000;
 const startServer = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log("MongoDB Atlas connected successfully");
+    console.log('MongoDB Atlas connected successfully');
 
     app.listen(PORT, () => {
       console.log(`✅ Server running on port ${PORT}`);
