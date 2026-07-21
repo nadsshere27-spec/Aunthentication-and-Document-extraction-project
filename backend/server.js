@@ -24,6 +24,7 @@ const applicationRoutes = require('./src/routes/application/application.routes')
 const adminRoutes = require('./src/routes/admin/admin.routes');
 const profileRoutes = require('./src/routes/profile/profile.routes');
 const compareRoutes = require('./src/routes/compare/compare.routes');
+const chatbotRoutes = require('./src/routes/chatbot/chatbot.routes');
 
 console.log('✅ Auth Routes loaded successfully!');
 console.log('✅ CV Routes loaded successfully!');
@@ -50,6 +51,7 @@ app.use('/api/application', applicationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/compare', compareRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({

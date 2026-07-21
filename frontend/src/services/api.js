@@ -258,4 +258,17 @@ export const getDashboardStats = async (token) => {
     return { success: false, message: error.message || "Network error" };
   }
 };
+export const askChatbot = async (token, question) => {
+  try {
+    const response = await api.post(
+      "/chatbot/ask",
+      { question },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  } catch (error) {
+    if (error.response) return error.response.data;
+    return { success: false, message: error.message || "Network error" };
+  }
+};
 export default api;

@@ -12,6 +12,7 @@ import EditApplication from "./pages/admin/EditApplication";
 import CodeEditor from "./pages/CodeEditor";
 import Profile from "./pages/profile/Profile";
 import Compare from "./pages/compare/Compare";
+import Chatbot from "./pages/chatbot/Chatbot";
 import Layout from "./components/Layout";
 
 function App() {
@@ -63,11 +64,19 @@ function App() {
             </Layout>
           }
         />
-<Route
+        <Route
           path="/compare"
           element={
             <Layout title="Compare documents" hideSidebar>
               <Compare />
+            </Layout>
+          }
+        />
+        <Route
+          path="/chatbot"
+          element={
+            <Layout title="Invoice Assistant">
+              <Chatbot />
             </Layout>
           }
         />
