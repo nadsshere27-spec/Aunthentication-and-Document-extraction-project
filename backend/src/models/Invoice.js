@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const invoiceSchema = new mongoose.Schema({
+  displayId: { type: Number, unique: true, sparse: true }, // sparse = old docs without it don't conflict
   invoiceNumber: { type: String, required: true },
   date: { type: Date, required: true },
   category: { type: String, required: true },

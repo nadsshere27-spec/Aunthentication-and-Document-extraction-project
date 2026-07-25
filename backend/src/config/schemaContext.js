@@ -5,6 +5,7 @@ const SCHEMA_CONTEXT = {
       + "of a SALE, not the product catalog itself.",
     fields: {
       _id: "ObjectId",
+      displayId: "Number — the human-friendly sequential ID, e.g. invoice #25",
       invoiceNumber: "String",
       date: "Date",
       category: "String",
@@ -29,6 +30,7 @@ const SCHEMA_CONTEXT = {
       + "names, prices, and stock levels live — not on invoices.",
     fields: {
       _id: "ObjectId",
+      displayId: "Number — the human-friendly sequential ID, e.g. product #25",
       name: "String — the product's name",
       category: "String",
       price: "Number — the product's price",
@@ -52,4 +54,42 @@ const ALLOWED_OPERATIONS = ["find", "count", "aggregate", "distinct"];
 // Only things we genuinely have no data model for at all.
 const UNSUPPORTED_DOMAINS = ["suppliers", "finance", "expenses", "profit", "payable"];
 
-module.exports = { SCHEMA_CONTEXT, ALLOWED_OPERATIONS, UNSUPPORTED_DOMAINS };
+// ---------- Write (create/update/delete) config ----------
+// Kept separate from the read config above on purpose: read questions never
+// touch this, so nothing about the existing read-only behavior changes.
+
+const ALLOWED_WRITE_OPERATIONS = ["create", "update", "delete"];
+
+// Fields that MUST be provided (by the user, across however many messages it
+// takes) before a create can actually happen.
+const REQUIRED_FIELDS = {
+  products: ["name", "price"],
+  invoices: ["customerName", "itemName", "amount"],
+};
+
+// Fields auto-filled on create if the user didn't specify them. Values that
+// are functions get called at creation time (e.g. "now").
+const DEFAULT_VALUES = {
+  products: { category: "Uncategorized", stock: 0 },
+  invoices: {
+    category: "Uncategorized",
+    status: "pending",
+    paymentMethod: "unknown",
+    tax: 0,
+    date: () => new Date(),
+  },
+};
+
+// Fields the AI is never allowed to set directly, even if it tries — these
+// are either system-managed (displayId, timestamps) or the Mongo internal id.
+const NON_WRITABLE_FIELDS = ["_id", "displayId", "createdAt", "updatedAt"];
+
+module.exports = {
+  SCHEMA_CONTEXT,
+  ALLOWED_OPERATIONS,
+  UNSUPPORTED_DOMAINS,
+  ALLOWED_WRITE_OPERATIONS,
+  REQUIRED_FIELDS,
+  DEFAULT_VALUES,
+  NON_WRITABLE_FIELDS,
+};

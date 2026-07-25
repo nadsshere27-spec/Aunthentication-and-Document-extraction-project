@@ -19,10 +19,13 @@ const toDisplayText = (value, fallback) => {
 
 function Chatbot() {
   const [messages, setMessages] = useState([
-    { from: "bot", text: "Hi! Ask me anything about invoices, customers, payments, products, or sales." }
+    { from: "bot", text: "Hi! Ask me anything about invoices, customers, payments, products, or sales — or ask me to create, update, or delete a record." }
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  // Tracks an in-progress create/update/delete across messages (e.g. waiting
+  // for a missing field, or a yes/no confirmation). Null = no action pending.
+  const [pendingAction, setPendingAction] = useState(null);
   const endRef = useRef(null);
 
   useEffect(() => {
@@ -39,18 +42,21 @@ function Chatbot() {
 
     try {
       const token = localStorage.getItem("token");
-      const result = await askChatbot(token, question);
+      const result = await askChatbot(token, question, pendingAction);
 
       const text = result?.success
         ? toDisplayText(result.answer, "I couldn't generate an answer for that.")
         : toDisplayText(result?.message, "Something went wrong.");
 
       setMessages((prev) => [...prev, { from: "bot", text }]);
+      // Carry forward (or clear) the pending action for the next message
+      setPendingAction(result?.pendingAction ?? null);
     } catch (err) {
       setMessages((prev) => [
         ...prev,
         { from: "bot", text: toDisplayText(err, "Something went wrong. Please try again.") }
       ]);
+      setPendingAction(null);
     } finally {
       setLoading(false);
     }
@@ -64,7 +70,7 @@ function Chatbot() {
     <div className="chatbot-page">
       <div className="chatbot-header">
         <h1>Invoice Assistant</h1>
-        <p>Ask questions about the invoice data.</p>
+        <p>Ask questions about the invoice data, or ask me to create, update, or delete a record.</p>
       </div>
 
       <div className="chatbot-window">
@@ -74,6 +80,11 @@ function Chatbot() {
               {msg.text}
             </div>
           ))}
+          {pendingAction && (
+            <div className="chatbot-bubble chatbot-bubble-bot" style={{ opacity: 0.7, fontStyle: "italic" }}>
+              (waiting on your reply to continue...)
+            </div>
+          )}
           {loading && <div className="chatbot-bubble chatbot-bubble-bot">Thinking...</div>}
           <div ref={endRef} />
         </div>
@@ -81,7 +92,7 @@ function Chatbot() {
         <div className="chatbot-input-row">
           <input
             type="text"
-            placeholder="Ask a question..."
+            placeholder="Ask a question, or say 'create a product...'"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
