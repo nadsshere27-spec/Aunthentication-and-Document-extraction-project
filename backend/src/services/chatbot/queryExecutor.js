@@ -18,12 +18,17 @@ async function executeQuery(spec) {
     return { operation: 'count', count };
   }
 
+  if (spec.operation === 'distinct') {
+    const values = await Model.distinct(spec.distinctField, filter);
+    return { operation: 'distinct', field: spec.distinctField, values };
+  }
+
   if (spec.operation === 'find') {
     let query = Model.find(filter);
     if (spec.sort) query = query.sort(spec.sort);
-    query = query.limit(spec.limit || 50);
+    query = query.limit(spec.limit || 200);
     const docs = await query.lean();
-    return { operation: 'find', docs };
+    return { operation: 'find', docs, customerLookup: !!spec.customerLookup };
   }
 
   if (spec.operation === 'aggregate') {

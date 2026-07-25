@@ -22,20 +22,22 @@ There are two possible intents:
    business data covered by the schema below. This includes short fragments
    like "invoices today?", "unpaid ones", "mobile category count", casual
    phrasing, missing question words, typos, whatever — if the user is clearly
-   asking about invoices, customers, payments, products, or sales, treat it
-   as data_query. Do NOT require exact phrasing like "how many X" — infer
+   asking about invoices, customers, products, or sales, treat it as
+   data_query. Do NOT require exact phrasing like "how many X" — infer
    intent the way a human accountant would.
    Output shape:
    {
      "intent": "data_query",
      "collection": "invoices" | "products",
-     "operation": "find" | "count" | "aggregate",
+     "operation": "find" | "count" | "aggregate" | "distinct",
      "filter": {},
      "pipeline": [],
+     "distinctField": "",
      "sort": {},
      "limit": 50,
      "unsupported": false,
-     "reason": ""
+     "reason": "",
+     "customerLookup": false
    }
 
 Schema (only these collections/fields exist, never invent others):
@@ -44,14 +46,32 @@ ${JSON.stringify(SCHEMA_CONTEXT, null, 2)}
 Allowed operations: ${ALLOWED_OPERATIONS.join(', ')}
 
 Rules for data_query:
-- "customers" are not a separate collection — customer questions run against
-  invoices.customerName (e.g. group by customerName using aggregate).
+- There is no separate "customers" collection. Customer questions run against
+  invoices.customerName:
+  - "list of customers" / "who are our customers" / "give me customer list"
+    -> { "operation": "distinct", "collection": "invoices", "distinctField": "customerName", "filter": {} }
+    This is a FULLY SUPPORTED question. Never mark it unsupported.
+  - "info about customer X" / "how much did X buy" / a question naming ONE
+    specific customer -> { "operation": "find", "collection": "invoices",
+    "filter": { "customerName": { "$regex": "X", "$options": "i" } },
+    "customerLookup": true }
+    Set "customerLookup": true whenever the filter targets one named person,
+    so the app can check if the name is ambiguous (matches more than one
+    distinct real customer) before answering.
 - "payments" are not separate — use invoices.paymentMethod and invoices.status.
+- "list of categories" / "what categories do we sell" -> distinct on the
+  relevant collection's "category" field.
 - If it needs data we don't have (${UNSUPPORTED_DOMAINS.join(', ')}),
   set "unsupported": true with a short "reason". Do not guess.
 - "today"/"this month"/"this week"/"yesterday" -> compute real ISO date
   ranges yourself using the current date given below, filter on "date".
 - Never invent fields. Never write/update/delete.
+- For "list"/"show me"/"give me all" style requests, do not artificially cap
+  results — set limit to 200 (the max allowed) rather than a small default,
+  so the full list can actually be returned.
+- For simple totals like "total invoices", "how many invoices in total",
+  use operation "count" with an empty filter — do NOT use "aggregate" unless
+  you actually need grouping, summing, or a "highest/most/top" style ranking.
 
 General rule (important):
 - This system is READ-ONLY — it can only look up and report existing data,
@@ -64,10 +84,6 @@ General rule (important):
   fixed list of trigger words.
 
 Return ONLY one JSON object, either shape above. Nothing else.
-- For simple totals like "total invoices", "how many invoices in total",
-  use operation "count" with an empty filter — do NOT use "aggregate" unless
-  you actually need grouping, summing, or a "highest/most/top" style ranking.
-  
 `;
 
 async function nl2Query(question) {
@@ -117,6 +133,13 @@ function validateSpec(spec) {
   }
 
   const allowedFields = Object.keys(SCHEMA_CONTEXT[spec.collection].fields);
+
+  if (spec.operation === 'distinct') {
+    if (!spec.distinctField || !allowedFields.includes(spec.distinctField)) {
+      throw new Error(`Non-whitelisted distinct field: ${spec.distinctField}`);
+    }
+  }
+
   const filterFields = spec.filter ? Object.keys(flattenKeys(spec.filter)) : [];
   for (const field of filterFields) {
     const base = field.split('.')[0];

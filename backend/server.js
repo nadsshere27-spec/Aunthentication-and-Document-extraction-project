@@ -1,4 +1,8 @@
 console.log('🚀 SERVER FILE VERSION: TEST123');
+
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first');
+
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');

@@ -2,6 +2,31 @@ const { nl2Query } = require('../../services/chatbot/nl2QueryService');
 const { executeQuery } = require('../../services/chatbot/queryExecutor');
 const { formatAnswer } = require('../../services/chatbot/answerFormatterService');
 
+// If a "customer lookup" query (fuzzy name match) actually matches more than
+// one distinct real customer, we ask which one before answering, instead of
+// silently merging them or guessing. Since there's no separate Customer
+// collection with real IDs, we identify each match by their invoice numbers.
+function checkCustomerAmbiguity(spec, result) {
+  if (!spec.customerLookup || result.operation !== 'find') return null;
+
+  const distinctNames = [...new Set(result.docs.map((d) => d.customerName))];
+  if (distinctNames.length <= 1) return null;
+
+  const options = distinctNames.map((name) => {
+    const invoiceNumbers = result.docs
+      .filter((d) => d.customerName === name)
+      .map((d) => d.invoiceNumber)
+      .join(', ');
+    return `• ${name} (invoices: ${invoiceNumbers})`;
+  });
+
+  return (
+    `I found a few different customers matching that name — which one did you mean?\n\n` +
+    options.join('\n') +
+    `\n\nJust tell me the full name or an invoice number and I'll pull up their info.`
+  );
+}
+
 const askChatbot = async (req, res) => {
   try {
     const { question } = req.body;
@@ -16,7 +41,7 @@ const askChatbot = async (req, res) => {
       console.error('❌ Failed to parse question:', err.message);
       return res.status(200).json({
         success: true,
-        answer: "Sorry, I couldn't understand that. Try asking about invoices, customers, payments, or products."
+        answer: "Sorry, I couldn't understand that. Try asking about invoices, customers, or products."
       });
     }
 
@@ -25,7 +50,13 @@ const askChatbot = async (req, res) => {
     }
 
     const result = await executeQuery(spec);
-    const answer = formatAnswer(question, result);
+
+    const ambiguityPrompt = checkCustomerAmbiguity(spec, result);
+    if (ambiguityPrompt) {
+      return res.status(200).json({ success: true, answer: ambiguityPrompt, spec, result });
+    }
+
+    const answer = await formatAnswer(question, result);
 
     res.status(200).json({ success: true, answer, spec, result });
 
