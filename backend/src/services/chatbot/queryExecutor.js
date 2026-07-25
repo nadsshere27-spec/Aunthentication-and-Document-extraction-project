@@ -15,12 +15,12 @@ async function executeQuery(spec) {
 
   if (spec.operation === 'count') {
     const count = await Model.countDocuments(filter);
-    return { operation: 'count', count };
+    return { operation: 'count', collection: spec.collection, count };
   }
 
   if (spec.operation === 'distinct') {
     const values = await Model.distinct(spec.distinctField, filter);
-    return { operation: 'distinct', field: spec.distinctField, values };
+    return { operation: 'distinct', collection: spec.collection, field: spec.distinctField, values };
   }
 
   if (spec.operation === 'find') {
@@ -28,7 +28,13 @@ async function executeQuery(spec) {
     if (spec.sort) query = query.sort(spec.sort);
     query = query.limit(spec.limit || 200);
     const docs = await query.lean();
-    return { operation: 'find', docs, customerLookup: !!spec.customerLookup };
+    return {
+      operation: 'find',
+      collection: spec.collection,
+      docs,
+      customerLookup: !!spec.customerLookup,
+      minimal: !!spec.minimal,
+    };
   }
 
   if (spec.operation === 'aggregate') {
@@ -37,10 +43,10 @@ async function executeQuery(spec) {
     // (e.g. "total invoices") — fall back to a plain count instead of crashing.
     if (pipeline.length === 0) {
       const count = await Model.countDocuments(filter);
-      return { operation: 'count', count };
+      return { operation: 'count', collection: spec.collection, count };
     }
     const docs = await Model.aggregate(pipeline);
-    return { operation: 'aggregate', docs };
+    return { operation: 'aggregate', collection: spec.collection, docs };
   }
 
   throw new Error(`Unsupported operation: ${spec.operation}`);

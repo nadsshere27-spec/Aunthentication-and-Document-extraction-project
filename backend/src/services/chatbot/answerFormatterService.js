@@ -13,7 +13,7 @@ async function casualIntro(instruction) {
           role: "system",
           content: "You are a friendly accounting assistant chatting with a colleague. "
             + "Write ONE short, casual, natural sentence. No JSON, no braces, no code, "
-            + "no bullet points, no markdown. Just talk like a normal person."
+            + "no bullet points, no markdown, no record IDs. Just talk like a normal person."
         },
         { role: "user", content: instruction }
       ],
@@ -28,23 +28,58 @@ async function casualIntro(instruction) {
 }
 
 const money = (n) => `Rs ${Number(n || 0).toLocaleString('en-PK')}`;
-const fmtDate = (d) => (d ? new Date(d).toISOString().split('T')[0] : '—');
+const fmtDate = (d) => (d ? new Date(d).toISOString().split('T')[0] : null);
 
-function renderInvoiceLine(doc) {
-  const parts = [`#${doc.invoiceNumber || doc._id}`];
+// ---------- Invoices ----------
+
+function renderInvoiceLine(doc, minimal) {
+  if (minimal) {
+    const parts = [doc.itemName, doc.amount != null ? money(doc.amount) : null].filter(Boolean);
+    return `• ${parts.join(' — ')}`;
+  }
+  const parts = [`#${doc.invoiceNumber}`];
   if (doc.customerName) parts.push(doc.customerName);
   if (doc.itemName) parts.push(doc.itemName);
   if (doc.category) parts.push(`(${doc.category})`);
   if (doc.amount != null) parts.push(money(doc.amount));
   if (doc.status) parts.push(doc.status);
   if (doc.paymentMethod && doc.paymentMethod !== 'unknown') parts.push(doc.paymentMethod);
-  if (doc.date) parts.push(fmtDate(doc.date));
+  const d = fmtDate(doc.date);
+  if (d) parts.push(d);
   return `• ${parts.join(' — ')}`;
 }
 
+function singleInvoiceSentence(doc) {
+  const bits = [`Invoice #${doc.invoiceNumber}`];
+  if (doc.customerName) bits.push(`for ${doc.customerName}`);
+  if (doc.itemName) bits.push(`— ${doc.itemName}`);
+  if (doc.amount != null) bits.push(`, ${money(doc.amount)}`);
+  if (doc.status) bits.push(`, ${doc.status}`);
+  if (doc.paymentMethod && doc.paymentMethod !== 'unknown') bits.push(` via ${doc.paymentMethod}`);
+  const d = fmtDate(doc.date);
+  if (d) bits.push(` on ${d}`);
+  return bits.join(' ').replace(/ ,/g, ',') + '.';
+}
+
+// ---------- Products ----------
+
+function renderProductLine(doc, minimal) {
+  if (minimal) {
+    return `• ${doc.name} — ${money(doc.price)}`;
+  }
+  return `• ${doc.name} — ${money(doc.price)} (${doc.category}, ${doc.stock} in stock)`;
+}
+
+function singleProductSentence(doc, minimal) {
+  if (minimal) {
+    return `${doc.name} — ${money(doc.price)}.`;
+  }
+  return `The price of ${doc.name} is ${money(doc.price)} (${doc.category}, ${doc.stock} in stock).`;
+}
+
+// ---------- Aggregate (generic, shape depends on the AI's pipeline) ----------
+
 function renderAggregateLine(doc) {
-  // Aggregate docs have arbitrary shapes depending on the pipeline the AI
-  // built (e.g. { _id: "Sohail Garments", total: 5000 }). Render generically.
   const label = doc._id === null || doc._id === undefined ? 'Overall' : String(doc._id);
   const rest = Object.entries(doc)
     .filter(([k]) => k !== '_id')
@@ -74,13 +109,27 @@ async function formatAnswer(question, result) {
   }
 
   if (result.operation === 'find') {
-    const { docs } = result;
+    const { docs, collection, minimal } = result;
     if (docs.length === 0) {
-      return "No matching records found — you might want to try a different name or date range.";
+      return "No matching records found — you might want to try a different name or spelling.";
     }
-    const intro = await casualIntro(`Tell the user you found ${docs.length} matching invoice record(s) for: "${question}". Keep it to one sentence, the full list will follow separately.`);
-    const list = docs.map(renderInvoiceLine).join('\n');
-    return `${intro || `Found ${docs.length} record${docs.length === 1 ? '' : 's'}:`}\n\n${list}`;
+
+    const isProduct = collection === 'products';
+
+    // Single match: answer in one natural sentence, no bullets, no IDs.
+    if (docs.length === 1) {
+      return isProduct ? singleProductSentence(docs[0], minimal) : singleInvoiceSentence(docs[0]);
+    }
+
+    // Multiple matches: short casual intro + a clean deterministic list
+    // (kept deterministic so nothing gets dropped or invented for long lists).
+    const intro = await casualIntro(
+      `Tell the user you found ${docs.length} matching ${isProduct ? 'products' : 'invoice record(s)'} for: "${question}". Keep it to one sentence, the full list follows separately.`
+    );
+    const list = docs
+      .map((d) => (isProduct ? renderProductLine(d, minimal) : renderInvoiceLine(d, minimal)))
+      .join('\n');
+    return `${intro || `Found ${docs.length} result${docs.length === 1 ? '' : 's'}:`}\n\n${list}`;
   }
 
   if (result.operation === 'aggregate') {

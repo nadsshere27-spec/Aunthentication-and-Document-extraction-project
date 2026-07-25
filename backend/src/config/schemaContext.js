@@ -1,13 +1,14 @@
 const SCHEMA_CONTEXT = {
   invoices: {
     collection: "Invoice",
-    description: "Customer invoices, one line item per invoice",
+    description: "Customer invoices, one line item per invoice — this is a record "
+      + "of a SALE, not the product catalog itself.",
     fields: {
       _id: "ObjectId",
       invoiceNumber: "String",
       date: "Date",
       category: "String",
-      itemName: "String",
+      itemName: "String — what was sold in this transaction",
       amount: "Number",
       customerName: "String",
       status: "String enum: ['paid','pending','cancelled']",
@@ -24,15 +25,23 @@ const SCHEMA_CONTEXT = {
   },
   products: {
     collection: "Product",
-    description: "Product/inventory catalog",
+    description: "The actual product catalog / inventory. THIS is where product "
+      + "names, prices, and stock levels live — not on invoices.",
     fields: {
       _id: "ObjectId",
-      name: "String",
+      name: "String — the product's name",
       category: "String",
-      price: "Number",
-      stock: "Number",
+      price: "Number — the product's price",
+      stock: "Number — units currently in stock",
       createdAt: "Date"
-    }
+    },
+    notes: "ANY question about 'a product', 'the price of X', 'list of products', "
+      + "'products in category Y', 'stock of X', 'what products do we sell', "
+      + "'name a product', etc. -> ALWAYS query the products collection, filtering "
+      + "on the products.name field with a case-insensitive $regex when a specific "
+      + "product is named. NEVER answer product-catalog questions from invoices, "
+      + "even though invoices also has an itemName/category field — those describe "
+      + "a past sale, not the current catalog."
   }
 };
 
