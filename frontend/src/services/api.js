@@ -258,6 +258,47 @@ export const getDashboardStats = async (token) => {
     return { success: false, message: error.message || "Network error" };
   }
 };
+// ============================================
+// INVOICES & CUSTOMERS APIs
+// ============================================
+
+export const getInvoices = async (token) => {
+  try {
+    const response = await api.get("/invoices", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response) return error.response.data;
+    return { success: false, message: error.message || "Network error" };
+  }
+};
+
+export const getCustomers = async (token) => {
+  try {
+    const response = await api.get("/invoices/customers", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response) return error.response.data;
+    return { success: false, message: error.message || "Network error" };
+  }
+};
+
+export const getCustomerInvoices = async (token, customerName) => {
+  try {
+    const response = await api.get(
+      `/invoices/customers/${encodeURIComponent(customerName)}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  } catch (error) {
+    if (error.response) return error.response.data;
+    return { success: false, message: error.message || "Network error" };
+  }
+};
+
 export const askChatbot = async (token, question, pendingAction = null) => {
   try {
     const response = await api.post(

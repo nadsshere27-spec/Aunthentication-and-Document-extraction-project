@@ -13,6 +13,8 @@ import CodeEditor from "./pages/CodeEditor";
 import Profile from "./pages/profile/Profile";
 import Compare from "./pages/compare/Compare";
 import Chatbot from "./pages/chatbot/Chatbot";
+import Invoices from "./pages/invoices/invoices";
+import Customers from "./pages/customers/customers";
 import Layout from "./components/Layout";
 
 function App() {
@@ -29,6 +31,22 @@ function App() {
           element={
             <Layout title="Dashboard">
               <Dashboard />
+            </Layout>
+          }
+        />
+        <Route
+          path="/invoices"
+          element={
+            <Layout title="Invoices">
+              <Invoices />
+            </Layout>
+          }
+        />
+        <Route
+          path="/customers"
+          element={
+            <Layout title="Customers">
+              <Customers />
             </Layout>
           }
         />

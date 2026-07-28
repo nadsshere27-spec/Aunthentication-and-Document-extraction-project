@@ -1,0 +1,195 @@
+.customers-page {
+  background: #F7F8F5;
+  min-height: 100%;
+  padding: 40px 30px;
+}
+
+.customers-header {
+  max-width: 1200px;
+  margin: 0 auto 24px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.customers-header h1 {
+  font-size: 28px;
+  font-weight: 600;
+  color: #2D3436;
+  margin: 0;
+}
+
+.customers-header p {
+  font-size: 15px;
+  color: #6B7280;
+  margin-top: 6px;
+}
+
+.customers-search {
+  min-width: 260px;
+  padding: 10px 14px;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+}
+
+.customers-search:focus {
+  border-color: #4a7c59;
+}
+
+.customers-table-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  overflow-x: auto;
+}
+
+.customers-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.customers-table th {
+  text-align: left;
+  padding: 14px 16px;
+  background: #f0f2f5;
+  color: #444;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-bottom: 2px solid #e0e3e8;
+  white-space: nowrap;
+}
+
+.customers-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #eef0f3;
+  font-size: 0.92rem;
+  color: #222;
+  white-space: nowrap;
+}
+
+.customers-table tr:hover td {
+  background: #fafbfc;
+}
+
+.customers-capitalize {
+  text-transform: capitalize;
+}
+
+.customers-empty-row td {
+  text-align: center;
+  padding: 30px;
+  color: #888;
+  white-space: normal;
+}
+
+.customers-status-text {
+  padding: 30px;
+  text-align: center;
+  color: #6B7280;
+}
+
+.customers-error {
+  color: #d64545;
+}
+
+.customers-breakdown {
+  font-variant-numeric: tabular-nums;
+}
+
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.dot:not(:first-child) {
+  margin-left: 10px;
+}
+
+.dot-paid {
+  background: #1f8a4c;
+}
+
+.dot-pending {
+  background: #b5730a;
+}
+
+.dot-cancelled {
+  background: #c92a2a;
+}
+
+.customers-view-btn {
+  padding: 7px 14px;
+  background: #4a7c59;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.customers-view-btn:hover {
+  background: #3e6a4b;
+}
+
+/* Drill-down drawer */
+
+.customers-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 100;
+}
+
+.customers-drawer {
+  width: min(560px, 92vw);
+  height: 100%;
+  background: #fff;
+  padding: 28px;
+  overflow-y: auto;
+  box-shadow: -8px 0 30px rgba(0, 0, 0, 0.12);
+}
+
+.customers-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.customers-drawer-header h2 {
+  font-size: 20px;
+  color: #2D3436;
+  margin: 0;
+}
+
+.customers-drawer-close {
+  background: none;
+  border: none;
+  font-size: 26px;
+  line-height: 1;
+  color: #888;
+  cursor: pointer;
+}
+
+.customers-drawer-close:hover {
+  color: #333;
+}
+
+@media (max-width: 768px) {
+  .customers-page {
+    padding: 30px 20px;
+  }
+}
