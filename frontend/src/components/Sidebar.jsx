@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { FaTachometerAlt, FaFileUpload, FaFileAlt, FaCode, FaExchangeAlt, FaRobot, FaFileInvoiceDollar, FaUsers } from "react-icons/fa";
+import { FaTachometerAlt, FaFileUpload, FaFileAlt, FaCode, FaExchangeAlt, FaRobot, FaFileInvoiceDollar, FaUsers, FaBoxOpen } from "react-icons/fa";
 import Logo from "./Logo";
 import "./Sidebar.css";
 
@@ -7,6 +7,10 @@ const NAV_ITEMS = [
   { to: "/dashboard", label: "Dashboard", icon: FaTachometerAlt },
   { to: "/invoices", label: "Invoices", icon: FaFileInvoiceDollar },
   { to: "/customers", label: "Customers", icon: FaUsers },
+  { to: "/products", label: "Products", icon: FaBoxOpen },
+];
+
+const OTHER_NAV_ITEMS = [
   { to: "/upload-cv", label: "Upload CV", icon: FaFileUpload },
   { to: "/application-form", label: "Application", icon: FaFileAlt },
   { to: "/code-editor", label: "Code Editor", icon: FaCode },
@@ -24,6 +28,23 @@ function Sidebar() {
       </div>
       <nav className="sidebar-nav">
         {NAV_ITEMS.map((item) => {
+          const Icon = item.icon;
+          const isActive = location.pathname === item.to;
+          return (
+            <Link
+              key={item.to}
+              to={item.to}
+              className={`sidebar-link ${isActive ? "sidebar-link-active" : ""}`}
+            >
+              <Icon size={16} />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+
+        <p className="sidebar-section-label">Others</p>
+
+        {OTHER_NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.to;
           return (

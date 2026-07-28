@@ -299,6 +299,71 @@ export const getCustomerInvoices = async (token, customerName) => {
   }
 };
 
+// ============================================
+// PRODUCTS APIs (full CRUD)
+// ============================================
+
+export const getProducts = async (token, params = {}) => {
+  try {
+    const response = await api.get("/products", {
+      headers: { Authorization: `Bearer ${token}` },
+      params,
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response) return error.response.data;
+    return { success: false, message: error.message || "Network error" };
+  }
+};
+
+export const getProductCategories = async (token) => {
+  try {
+    const response = await api.get("/products/categories", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response) return error.response.data;
+    return { success: false, message: error.message || "Network error" };
+  }
+};
+
+export const createProduct = async (token, productData) => {
+  try {
+    const response = await api.post("/products", productData, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response) return error.response.data;
+    return { success: false, message: error.message || "Network error" };
+  }
+};
+
+export const updateProduct = async (token, id, productData) => {
+  try {
+    const response = await api.put(`/products/${id}`, productData, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response) return error.response.data;
+    return { success: false, message: error.message || "Network error" };
+  }
+};
+
+export const deleteProduct = async (token, id) => {
+  try {
+    const response = await api.delete(`/products/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response) return error.response.data;
+    return { success: false, message: error.message || "Network error" };
+  }
+};
+
 export const askChatbot = async (token, question, pendingAction = null) => {
   try {
     const response = await api.post(

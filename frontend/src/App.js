@@ -15,6 +15,7 @@ import Compare from "./pages/compare/Compare";
 import Chatbot from "./pages/chatbot/Chatbot";
 import Invoices from "./pages/invoices/invoices";
 import Customers from "./pages/customers/customers";
+import Products from "./pages/products/products";
 import Layout from "./components/Layout";
 
 function App() {
@@ -47,6 +48,14 @@ function App() {
           element={
             <Layout title="Customers">
               <Customers />
+            </Layout>
+          }
+        />
+        <Route
+          path="/products"
+          element={
+            <Layout title="Products">
+              <Products />
             </Layout>
           }
         />

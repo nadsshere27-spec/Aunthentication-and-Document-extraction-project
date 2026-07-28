@@ -30,6 +30,7 @@ const profileRoutes = require('./src/routes/profile/profile.routes');
 const compareRoutes = require('./src/routes/compare/compare.routes');
 const chatbotRoutes = require('./src/routes/chatbot/chatbot.routes');
 const invoiceRoutes = require('./src/routes/invoice/invoice.routes');
+const productRoutes = require('./src/routes/product/product.routes');
 
 console.log('✅ Auth Routes loaded successfully!');
 console.log('✅ CV Routes loaded successfully!');
@@ -58,6 +59,7 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/compare', compareRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/invoices', invoiceRoutes);
+app.use('/api/products', productRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({
