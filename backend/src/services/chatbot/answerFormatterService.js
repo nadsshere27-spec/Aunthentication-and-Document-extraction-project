@@ -1,42 +1,48 @@
-const Groq = require('groq-sdk');
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-
-// Ask Groq for a short, casual intro line. We only ever let the LLM write the
-// FRAMING sentence — the actual numbers/list are built deterministically in
-// code below, so nothing gets hallucinated or silently dropped for long lists.
-async function casualIntro(instruction) {
-  try {
-    const completion = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
-      messages: [
-        {
-          role: "system",
-          content: "You are a friendly accounting assistant chatting with a colleague. "
-            + "Write ONE short, casual, natural sentence. No JSON, no braces, no code, "
-            + "no bullet points, no markdown, no record IDs. Just talk like a normal person."
-        },
-        { role: "user", content: instruction }
-      ],
-      temperature: 0.6,
-      max_tokens: 60
-    });
-    return completion.choices[0].message.content.trim();
-  } catch (err) {
-    console.error('⚠️ casualIntro failed, falling back to plain text:', err.message);
-    return null;
-  }
-}
+// No LLM call in this file anymore. The previous "casual intro" LLM call
+// would occasionally invent its own example names/values inside the framing
+// sentence (e.g. fabricating customer names that don't exist in the DB) even
+// though the real list followed right after — a hallucination risk that
+// isn't worth it just for variety in phrasing. Everything below is
+// deterministic: same accuracy guarantee as before, casual tone via rotating
+// plain-text templates instead of a model call.
 
 const money = (n) => `Rs ${Number(n || 0).toLocaleString('en-PK')}`;
 const fmtDate = (d) => (d ? new Date(d).toISOString().split('T')[0] : null);
 
-// ---------- Invoices ----------
+function pick(templates) {
+  return templates[Math.floor(Math.random() * templates.length)];
+}
 
-function renderInvoiceLine(doc, minimal) {
-  if (minimal) {
-    const parts = [doc.itemName, doc.amount != null ? money(doc.amount) : null].filter(Boolean);
-    return `• ${parts.join(' — ')}`;
-  }
+// ---------- Generic field-selective rendering (for displayFields) ----------
+
+function formatFieldValue(field, value) {
+  if (value === undefined || value === null) return null;
+  if (field === 'price' || field === 'amount') return money(value);
+  if (field === 'date') return fmtDate(value);
+  if (field === 'displayId') return `#${value}`;
+  return String(value);
+}
+
+function renderGenericLine(doc, fields) {
+  const parts = fields
+    .map((f) => formatFieldValue(f, doc[f]))
+    .filter((v) => v !== null);
+  return `• ${parts.join(' — ')}`;
+}
+
+// ---------- Products (default, no displayFields given) ----------
+
+function renderProductLine(doc) {
+  return `• ${doc.name} — ${money(doc.price)} (${doc.category}, ${doc.stock} in stock)`;
+}
+
+function singleProductSentence(doc) {
+  return `The price of ${doc.name} is ${money(doc.price)} (${doc.category}, ${doc.stock} in stock).`;
+}
+
+// ---------- Invoices (default, no displayFields given) ----------
+
+function renderInvoiceLine(doc) {
   const parts = [`#${doc.invoiceNumber}`];
   if (doc.customerName) parts.push(doc.customerName);
   if (doc.itemName) parts.push(doc.itemName);
@@ -61,22 +67,6 @@ function singleInvoiceSentence(doc) {
   return bits.join(' ').replace(/ ,/g, ',') + '.';
 }
 
-// ---------- Products ----------
-
-function renderProductLine(doc, minimal) {
-  if (minimal) {
-    return `• ${doc.name} — ${money(doc.price)}`;
-  }
-  return `• ${doc.name} — ${money(doc.price)} (${doc.category}, ${doc.stock} in stock)`;
-}
-
-function singleProductSentence(doc, minimal) {
-  if (minimal) {
-    return `${doc.name} — ${money(doc.price)}.`;
-  }
-  return `The price of ${doc.name} is ${money(doc.price)} (${doc.category}, ${doc.stock} in stock).`;
-}
-
 // ---------- Aggregate (generic, shape depends on the AI's pipeline) ----------
 
 function renderAggregateLine(doc) {
@@ -94,42 +84,62 @@ async function formatAnswer(question, result) {
   }
 
   if (result.operation === 'count') {
-    const intro = await casualIntro(`Tell the user there are ${result.count} matching records for their question: "${question}".`);
-    return intro || `You've got ${result.count} matching record${result.count === 1 ? '' : 's'}.`;
+    const templates = [
+      `You've got ${result.count} matching record${result.count === 1 ? '' : 's'}.`,
+      `That comes out to ${result.count} record${result.count === 1 ? '' : 's'}.`,
+      `Found ${result.count} matching record${result.count === 1 ? '' : 's'}.`,
+    ];
+    return pick(templates);
   }
 
   if (result.operation === 'distinct') {
-    const { field, values } = result;
+    const { field, values, countOnly } = result;
+
     if (values.length === 0) {
       return `No ${field} values found yet.`;
     }
-    const intro = await casualIntro(`Tell the user you found ${values.length} distinct ${field} values, and that they're listed below. Question was: "${question}".`);
+
+    if (countOnly) {
+      const label = field === 'customerName' ? 'customer' : field;
+      const templates = [
+        `You've got ${values.length} distinct ${label}${values.length === 1 ? '' : 's'}.`,
+        `There are ${values.length} distinct ${label}${values.length === 1 ? '' : 's'} in the system.`,
+      ];
+      return pick(templates);
+    }
+
+    const templates = [
+      `Here's the full list of ${values.length} ${field}:`,
+      `Found ${values.length} distinct ${field} — here they all are:`,
+    ];
     const list = values.map((v) => `• ${v}`).join('\n');
-    return `${intro || `Here are all ${values.length} ${field} values:`}\n\n${list}`;
+    return `${pick(templates)}\n\n${list}`;
   }
 
   if (result.operation === 'find') {
-    const { docs, collection, minimal } = result;
+    const { docs, collection, displayFields } = result;
     if (docs.length === 0) {
       return "No matching records found — you might want to try a different name or spelling.";
     }
 
     const isProduct = collection === 'products';
+    const useCustomFields = Array.isArray(displayFields) && displayFields.length > 0;
 
-    // Single match: answer in one natural sentence, no bullets, no IDs.
-    if (docs.length === 1) {
-      return isProduct ? singleProductSentence(docs[0], minimal) : singleInvoiceSentence(docs[0]);
+    // Single match, no specific field request: one natural sentence.
+    if (docs.length === 1 && !useCustomFields) {
+      return isProduct ? singleProductSentence(docs[0]) : singleInvoiceSentence(docs[0]);
     }
 
-    // Multiple matches: short casual intro + a clean deterministic list
-    // (kept deterministic so nothing gets dropped or invented for long lists).
-    const intro = await casualIntro(
-      `Tell the user you found ${docs.length} matching ${isProduct ? 'products' : 'invoice record(s)'} for: "${question}". Keep it to one sentence, the full list follows separately.`
-    );
+    const templates = [
+      `Found ${docs.length} matching ${isProduct ? 'product' : 'invoice'}${docs.length === 1 ? '' : 's'}:`,
+      `Here${docs.length === 1 ? "'s" : ' are'} ${docs.length} matching ${isProduct ? 'product' : 'invoice'}${docs.length === 1 ? '' : 's'}:`,
+    ];
+
     const list = docs
-      .map((d) => (isProduct ? renderProductLine(d, minimal) : renderInvoiceLine(d, minimal)))
+      .map((d) => (useCustomFields ? renderGenericLine(d, displayFields) : (isProduct ? renderProductLine(d) : renderInvoiceLine(d))))
       .join('\n');
-    return `${intro || `Found ${docs.length} result${docs.length === 1 ? '' : 's'}:`}\n\n${list}`;
+
+    return `${pick(templates)}\n\n${list}`;
   }
 
   if (result.operation === 'aggregate') {
@@ -137,9 +147,12 @@ async function formatAnswer(question, result) {
     if (docs.length === 0) {
       return "No matching data found for that.";
     }
-    const intro = await casualIntro(`Tell the user you worked out the numbers for: "${question}". Keep it to one sentence, the breakdown follows separately.`);
+    const templates = [
+      `Here's what I found:`,
+      `Here's the breakdown:`,
+    ];
     const list = docs.map(renderAggregateLine).join('\n');
-    return `${intro || 'Here\'s what I found:'}\n\n${list}`;
+    return `${pick(templates)}\n\n${list}`;
   }
 
   return "Hmm, I got a result back but I'm not sure how to explain it — mind rephrasing the question?";

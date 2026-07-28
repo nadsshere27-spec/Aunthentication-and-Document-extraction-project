@@ -1,9 +1,6 @@
 // backend/src/services/chatbot/actionService.js
 //
-// The only file that actually creates/updates/deletes documents. Keeping this
-// separate from the AI classification step means whatever the AI extracts
-// still has to pass through sanitizeFields() before touching the database —
-// same whitelist principle as the read-only queryExecutor.js.
+// The only file that actually creates/updates/deletes documents.
 
 const Invoice = require('../../models/Invoice');
 const Product = require('../../models/Product');
@@ -12,6 +9,22 @@ const { getNextSequence } = require('./sequenceService');
 const { SCHEMA_CONTEXT, DEFAULT_VALUES, NON_WRITABLE_FIELDS } = require('../../config/schemaContext');
 
 const MODELS = { invoices: Invoice, products: Product };
+
+// CRITICAL: Mongo/Mongoose treat `{ displayId: undefined }` as "no filter on
+// this field at all" — which means a query would match the FIRST document in
+// the collection rather than none. That's how a missing ID previously caused
+// silent updates/deletes on the wrong record. Every write path below checks
+// this before touching the database.
+function assertValidId(displayId) {
+  if (displayId === undefined || displayId === null || Number.isNaN(Number(displayId))) {
+    const err = new Error(
+      "This record doesn't have a valid ID yet (this can happen after reseeding data). " +
+      "Please re-run: node src/scripts/backfillDisplayIds.js — then try again."
+    );
+    err.code = 'INVALID_DISPLAY_ID';
+    throw err;
+  }
+}
 
 function sanitizeFields(collection, fields) {
   const allowed = Object.keys(SCHEMA_CONTEXT[collection].fields).filter(
@@ -45,7 +58,6 @@ async function createRecord(collection, fields, question) {
   const displayId = await getNextSequence(collection);
   merged.displayId = displayId;
 
-  // Invoice model requires invoiceNumber — auto-generate if not given.
   if (collection === 'invoices' && !merged.invoiceNumber) {
     merged.invoiceNumber = `INV-${1000 + displayId}`;
   }
@@ -63,6 +75,8 @@ async function createRecord(collection, fields, question) {
 }
 
 async function updateRecord(collection, displayId, changes, question) {
+  assertValidId(displayId);
+
   const Model = MODELS[collection];
   if (!Model) throw new Error(`No model bound for collection: ${collection}`);
 
@@ -85,6 +99,8 @@ async function updateRecord(collection, displayId, changes, question) {
 }
 
 async function deleteRecord(collection, displayId, question) {
+  assertValidId(displayId);
+
   const Model = MODELS[collection];
   if (!Model) throw new Error(`No model bound for collection: ${collection}`);
 
@@ -95,8 +111,6 @@ async function deleteRecord(collection, displayId, question) {
   return before;
 }
 
-// Used to locate a target for update/delete, or for a read-style lookup by
-// name/id. Returns an array — caller decides what to do with 0/1/many matches.
 async function findByNameOrId(collection, { displayId, name }) {
   const Model = MODELS[collection];
   if (!Model) throw new Error(`No model bound for collection: ${collection}`);

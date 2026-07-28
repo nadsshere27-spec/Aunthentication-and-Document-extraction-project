@@ -3,7 +3,7 @@ const { executeQuery } = require('../../services/chatbot/queryExecutor');
 const { formatAnswer } = require('../../services/chatbot/answerFormatterService');
 const { createRecord, updateRecord, deleteRecord, findByNameOrId } = require('../../services/chatbot/actionService');
 const { detectYesNo, extractFieldValue, extractChanges } = require('../../services/chatbot/pendingActionService');
-const { REQUIRED_FIELDS } = require('../../config/schemaContext');
+const { REQUIRED_FIELDS, OPTIONAL_FIELDS, DEFAULT_VALUES } = require('../../config/schemaContext');
 
 // ---------- Unchanged: customer-name ambiguity check for data_query ----------
 function checkCustomerAmbiguity(spec, result) {
@@ -27,7 +27,7 @@ function checkCustomerAmbiguity(spec, result) {
   );
 }
 
-// ---------- New: helpers for the action (create/update/delete) flow ----------
+// ---------- Helpers for the action (create/update/delete) flow ----------
 
 function renderSnapshot(collection, doc) {
   if (collection === 'products') {
@@ -57,13 +57,55 @@ function formatUpdated(collection, before, after) {
   return `✅ Updated — ${label} (ID ${after.displayId}). ${diffs || 'No visible changes.'}`;
 }
 
+// A doc found by name/id must have a real displayId before we let the user
+// act on it — see the note in actionService.js for why this matters.
+function hasValidId(doc) {
+  return doc && doc.displayId !== undefined && doc.displayId !== null;
+}
+
+const NO_ID_MESSAGE = (label) =>
+  `I found "${label}" but it doesn't have an ID assigned yet — this can happen after data gets reseeded. ` +
+  `Please ask an admin to run: node src/scripts/backfillDisplayIds.js — then try again.`;
+
+function describeDefaults(collection) {
+  const defs = DEFAULT_VALUES[collection] || {};
+  return Object.entries(defs)
+    .filter(([k]) => k !== 'date')
+    .map(([k, v]) => `${k}: ${typeof v === 'function' ? 'now' : v}`)
+    .join(', ');
+}
+
+function missingRequired(collection, fields) {
+  return REQUIRED_FIELDS[collection].filter((f) => fields[f] === undefined || fields[f] === null || fields[f] === '');
+}
+
+function missingOptional(collection, fields) {
+  return (OPTIONAL_FIELDS[collection] || []).filter((f) => fields[f] === undefined || fields[f] === null || fields[f] === '');
+}
+
+async function finalizeCreate(collection, fields, question, res) {
+  // All required fields present. If there are still unfilled optional
+  // fields, ask about them ONCE before actually creating — with the option
+  // to skip and use defaults.
+  const optMissing = missingOptional(collection, fields);
+  if (optMissing.length > 0) {
+    return res.status(200).json({
+      success: true,
+      answer: `Got it! Want to set ${optMissing.join(' and ')} too, or should I just use the defaults (${describeDefaults(collection)})?`,
+      pendingAction: { operation: 'create', collection, fields, stage: 'awaiting_optional' },
+    });
+  }
+
+  const doc = await createRecord(collection, fields, question);
+  return res.status(200).json({ success: true, answer: formatCreated(collection, doc), pendingAction: null });
+}
+
 async function startAction(spec, question, res) {
   const { operation, collection } = spec;
 
   if (operation === 'create') {
-    const required = REQUIRED_FIELDS[collection];
     const fields = spec.fields || {};
-    const missing = required.filter((f) => fields[f] === undefined || fields[f] === null || fields[f] === '');
+    const missing = missingRequired(collection, fields);
 
     if (missing.length > 0) {
       return res.status(200).json({
@@ -73,8 +115,7 @@ async function startAction(spec, question, res) {
       });
     }
 
-    const doc = await createRecord(collection, fields, question);
-    return res.status(200).json({ success: true, answer: formatCreated(collection, doc), pendingAction: null });
+    return finalizeCreate(collection, fields, question, res);
   }
 
   // delete or update — both need to locate the target record first
@@ -99,6 +140,11 @@ async function startAction(spec, question, res) {
   }
 
   const doc = matches[0];
+  const label = collection === 'products' ? doc.name : doc.itemName;
+
+  if (!hasValidId(doc)) {
+    return res.status(200).json({ success: true, answer: NO_ID_MESSAGE(label), pendingAction: null });
+  }
 
   if (operation === 'delete') {
     return res.status(200).json({
@@ -108,7 +154,6 @@ async function startAction(spec, question, res) {
     });
   }
 
-  // update
   return res.status(200).json({
     success: true,
     answer: `Here's what I found:\n\n• ${renderSnapshot(collection, doc)}\n\nWhat would you like to change?`,
@@ -118,6 +163,19 @@ async function startAction(spec, question, res) {
 
 async function continueAction(pendingAction, message, res) {
   const { operation, collection } = pendingAction;
+
+  if (operation === 'create' && pendingAction.stage === 'awaiting_optional') {
+    const wantsDefaults = /\b(skip|default|no|nah|nope|that'?s fine|just use|go ahead|none)\b/i.test(message);
+    let fields = pendingAction.fields;
+
+    if (!wantsDefaults) {
+      const extra = await extractChanges(collection, message);
+      fields = { ...fields, ...extra };
+    }
+
+    const doc = await createRecord(collection, fields, message);
+    return res.status(200).json({ success: true, answer: formatCreated(collection, doc), pendingAction: null });
+  }
 
   if (operation === 'create') {
     const nextField = pendingAction.missing[0];
@@ -132,8 +190,7 @@ async function continueAction(pendingAction, message, res) {
     }
 
     const fields = { ...pendingAction.fields, [nextField]: value };
-    const required = REQUIRED_FIELDS[collection];
-    const missing = required.filter((f) => fields[f] === undefined || fields[f] === null || fields[f] === '');
+    const missing = missingRequired(collection, fields);
 
     if (missing.length > 0) {
       return res.status(200).json({
@@ -143,8 +200,7 @@ async function continueAction(pendingAction, message, res) {
       });
     }
 
-    const doc = await createRecord(collection, fields, message);
-    return res.status(200).json({ success: true, answer: formatCreated(collection, doc), pendingAction: null });
+    return finalizeCreate(collection, fields, message, res);
   }
 
   if (operation === 'delete' && pendingAction.stage === 'confirm') {
@@ -202,7 +258,6 @@ async function continueAction(pendingAction, message, res) {
     });
   }
 
-  // Fallback: pendingAction shape wasn't recognized — reset rather than get stuck
   return res.status(200).json({
     success: true,
     answer: "Something went off track there — mind starting that request again?",
@@ -219,9 +274,15 @@ const askChatbot = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please ask a question' });
     }
 
-    // Mid-flow create/update/delete — interpret this message as the answer
     if (pendingAction) {
-      return await continueAction(pendingAction, question, res);
+      try {
+        return await continueAction(pendingAction, question, res);
+      } catch (err) {
+        if (err.code === 'INVALID_DISPLAY_ID') {
+          return res.status(200).json({ success: true, answer: err.message, pendingAction: null });
+        }
+        throw err;
+      }
     }
 
     let spec;
@@ -240,10 +301,17 @@ const askChatbot = async (req, res) => {
     }
 
     if (spec.intent === 'action_query') {
-      return await startAction(spec, question, res);
+      try {
+        return await startAction(spec, question, res);
+      } catch (err) {
+        if (err.code === 'INVALID_DISPLAY_ID') {
+          return res.status(200).json({ success: true, answer: err.message, pendingAction: null });
+        }
+        throw err;
+      }
     }
 
-    // ---- data_query: exact same path as before, untouched ----
+    // ---- data_query ----
     const result = await executeQuery(spec);
 
     const ambiguityPrompt = checkCustomerAmbiguity(spec, result);

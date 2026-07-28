@@ -47,28 +47,24 @@ const SCHEMA_CONTEXT = {
   }
 };
 
-// "distinct" added so "list of customers", "list of categories", "what payment
-// methods do we use" etc. can be answered without inventing a fake collection.
 const ALLOWED_OPERATIONS = ["find", "count", "aggregate", "distinct"];
-
-// Only things we genuinely have no data model for at all.
 const UNSUPPORTED_DOMAINS = ["suppliers", "finance", "expenses", "profit", "payable"];
 
 // ---------- Write (create/update/delete) config ----------
-// Kept separate from the read config above on purpose: read questions never
-// touch this, so nothing about the existing read-only behavior changes.
-
 const ALLOWED_WRITE_OPERATIONS = ["create", "update", "delete"];
 
-// Fields that MUST be provided (by the user, across however many messages it
-// takes) before a create can actually happen.
 const REQUIRED_FIELDS = {
   products: ["name", "price"],
   invoices: ["customerName", "itemName", "amount"],
 };
 
-// Fields auto-filled on create if the user didn't specify them. Values that
-// are functions get called at creation time (e.g. "now").
+// Fields that CAN be set on create but aren't strictly required — the user
+// gets asked about these once, with the option to skip and use defaults.
+const OPTIONAL_FIELDS = {
+  products: ["category", "stock"],
+  invoices: ["category", "status", "paymentMethod", "tax"],
+};
+
 const DEFAULT_VALUES = {
   products: { category: "Uncategorized", stock: 0 },
   invoices: {
@@ -80,9 +76,12 @@ const DEFAULT_VALUES = {
   },
 };
 
-// Fields the AI is never allowed to set directly, even if it tries — these
-// are either system-managed (displayId, timestamps) or the Mongo internal id.
 const NON_WRITABLE_FIELDS = ["_id", "displayId", "createdAt", "updatedAt"];
+
+const DEFAULT_DISPLAY_FIELDS = {
+  products: ["name", "price"],
+  invoices: ["invoiceNumber", "itemName", "amount"],
+};
 
 module.exports = {
   SCHEMA_CONTEXT,
@@ -90,6 +89,8 @@ module.exports = {
   UNSUPPORTED_DOMAINS,
   ALLOWED_WRITE_OPERATIONS,
   REQUIRED_FIELDS,
+  OPTIONAL_FIELDS,
   DEFAULT_VALUES,
   NON_WRITABLE_FIELDS,
+  DEFAULT_DISPLAY_FIELDS,
 };

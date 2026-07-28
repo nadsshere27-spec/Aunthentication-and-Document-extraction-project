@@ -20,7 +20,13 @@ async function executeQuery(spec) {
 
   if (spec.operation === 'distinct') {
     const values = await Model.distinct(spec.distinctField, filter);
-    return { operation: 'distinct', collection: spec.collection, field: spec.distinctField, values };
+    return {
+      operation: 'distinct',
+      collection: spec.collection,
+      field: spec.distinctField,
+      values,
+      countOnly: !!spec.countOnly,
+    };
   }
 
   if (spec.operation === 'find') {
@@ -33,14 +39,12 @@ async function executeQuery(spec) {
       collection: spec.collection,
       docs,
       customerLookup: !!spec.customerLookup,
-      minimal: !!spec.minimal,
+      displayFields: Array.isArray(spec.displayFields) ? spec.displayFields : [],
     };
   }
 
   if (spec.operation === 'aggregate') {
     const pipeline = Array.isArray(spec.pipeline) ? spec.pipeline : [];
-    // Guard: an empty pipeline means the model didn't actually need aggregation
-    // (e.g. "total invoices") — fall back to a plain count instead of crashing.
     if (pipeline.length === 0) {
       const count = await Model.countDocuments(filter);
       return { operation: 'count', collection: spec.collection, count };

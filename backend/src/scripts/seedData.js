@@ -2,6 +2,7 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const Invoice = require('../models/Invoice');
 const Product = require('../models/Product');
+const Counter = require('../models/Counter');
 
 const CATEGORIES = ['Mobile', 'Electronics', 'Groceries', 'Clothing', 'Furniture', 'Stationery'];
 const CUSTOMERS = ['Ali Raza', 'Sara Khan', 'Bilal Ahmed', 'Ayesha Malik', 'Usman Tariq', 'Hina Farooq', 'Zain Abbas', 'Mahnoor Iqbal'];
@@ -40,9 +41,12 @@ async function seed() {
   };
 
   const products = [];
+  let productSeq = 0;
   for (const category of CATEGORIES) {
     for (const name of productNames[category]) {
+      productSeq += 1;
       products.push({
+        displayId: productSeq, // <-- assigned directly, so reseeding is always safe now
         name,
         category,
         price: Math.floor(Math.random() * 50000) + 500,
@@ -51,17 +55,20 @@ async function seed() {
     }
   }
   await Product.insertMany(products);
-  console.log(`✅ Seeded ${products.length} products`);
+  await Counter.findOneAndUpdate({ name: 'products' }, { seq: productSeq }, { upsert: true });
+  console.log(`✅ Seeded ${products.length} products (IDs 1–${productSeq})`);
 
   // ---- Invoices ----
   const invoices = [];
-  const todayCount = 15; // guarantees "today" questions have real data
+  const todayCount = 15;
+  let invoiceSeq = 0;
 
-  // Spread across last 60 days
   for (let i = 0; i < 150; i++) {
     const category = randomFrom(CATEGORIES);
     const amount = Math.floor(Math.random() * 20000) + 500;
+    invoiceSeq += 1;
     invoices.push({
+      displayId: invoiceSeq,
       invoiceNumber: `INV-${1000 + i}`,
       date: randomDateWithinLastNDays(60),
       category,
@@ -74,13 +81,14 @@ async function seed() {
     });
   }
 
-  // Guarantee some invoices dated exactly today
   for (let i = 0; i < todayCount; i++) {
     const category = randomFrom(CATEGORIES);
     const amount = Math.floor(Math.random() * 20000) + 500;
     const today = new Date();
     today.setHours(Math.floor(Math.random() * 10) + 9, Math.floor(Math.random() * 60), 0, 0);
+    invoiceSeq += 1;
     invoices.push({
+      displayId: invoiceSeq,
       invoiceNumber: `INV-TODAY-${i}`,
       date: today,
       category,
@@ -94,9 +102,10 @@ async function seed() {
   }
 
   await Invoice.insertMany(invoices);
-  console.log(`✅ Seeded ${invoices.length} invoices (${todayCount} dated today)`);
+  await Counter.findOneAndUpdate({ name: 'invoices' }, { seq: invoiceSeq }, { upsert: true });
+  console.log(`✅ Seeded ${invoices.length} invoices (${todayCount} dated today, IDs 1–${invoiceSeq})`);
 
-  console.log('🎉 Seeding complete');
+  console.log('🎉 Seeding complete — every doc has a displayId, counters are in sync.');
   await mongoose.disconnect();
   process.exit(0);
 }

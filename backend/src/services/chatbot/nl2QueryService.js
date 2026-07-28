@@ -35,18 +35,16 @@ There are THREE possible intents:
      "filter": {},
      "pipeline": [],
      "distinctField": "",
+     "countOnly": false,
+     "displayFields": [],
      "sort": {},
      "limit": 50,
      "unsupported": false,
      "reason": "",
-     "customerLookup": false,
-     "minimal": false
+     "customerLookup": false
    }
 
 3) "action_query" — the user wants to CREATE, UPDATE, or DELETE a record.
-   Examples: "create a product name iphone charger", "delete the product
-   bluetooth speaker", "edit/update the product iphone charger", "add a new
-   invoice for customer X", "remove product 25".
    Output shape:
    {
      "intent": "action_query",
@@ -56,15 +54,11 @@ There are THREE possible intents:
      "fields": {}
    }
    - For "create": put whatever fields the user already gave into "fields"
-     (only real schema fields below — never invent a field). Leave "target"
-     empty — it's not used for create.
-   - For "update"/"delete": fill "target" with either a "displayId" (if the
-     user gave a number/ID) or a "name" (the product name / invoice item
-     name they're referring to). Leave "fields" empty for update — the
-     specific changes are collected in a later step, not here.
-   - Do NOT actually decide what's missing or ask questions yourself — that
-     happens in a separate step after this classification. Just extract what
-     you can from THIS message.
+     (only real schema fields below). Leave "target" empty.
+   - For "update"/"delete": fill "target" with a "displayId" or "name". Leave
+     "fields" empty — specific changes are collected in a later step.
+   - Do NOT decide what's missing or ask questions yourself here — that
+     happens in a separate step. Just extract what you can from THIS message.
 
 Schema (only these collections/fields exist, never invent others):
 ${JSON.stringify(SCHEMA_CONTEXT, null, 2)}
@@ -73,31 +67,44 @@ Allowed read operations: ${ALLOWED_OPERATIONS.join(', ')}
 Allowed write operations: ${ALLOWED_WRITE_OPERATIONS.join(', ')}
 
 CRITICAL — choosing the right collection:
-- Questions about "a product", a specific product's price/stock, "list of
-  products", "products in category X", "what do we sell", "name a product",
-  or creating/editing/deleting a PRODUCT -> ALWAYS collection: "products".
+- Questions about "a product", price/stock, "list of products", "products in
+  category X", or creating/editing/deleting a PRODUCT -> collection: "products".
 - Questions/actions about invoices, sales, revenue, a customer's purchase
   history -> collection: "invoices".
-- Never confuse the product catalog with invoice line items — invoices also
-  has itemName/category fields, but those describe a past sale, not the
-  current catalog.
+- Never confuse the product catalog with invoice line items.
+
+CRITICAL — customers are always a DISTINCT-NAME question, never a raw count:
+- "how many customers do we have" / "do we have N customers" / "is it N
+  customers" -> this is ALWAYS about the number of DISTINCT customerName
+  values, NEVER the total invoice count. Use:
+  { "operation": "distinct", "collection": "invoices", "distinctField": "customerName", "countOnly": true }
+  "countOnly": true means: just report how many distinct values there are,
+  do not list them all.
+- "list of customers" / "name all our customers" / "who are our customers"
+  -> same distinct query but "countOnly": false (the full list is wanted).
+- NEVER answer a customer-count question using operation "count" on the raw
+  invoices collection — that counts invoices, not customers, and will be wrong.
+
+CRITICAL — displayFields (which fields to actually show in the answer):
+- Default (user didn't mention formatting) -> leave "displayFields": [] and
+  the app will use sensible defaults.
+- If the user explicitly asks to include/exclude specific fields, set
+  "displayFields" to exactly the field names to show, e.g.:
+  - "list product names without prices" -> "displayFields": ["name"]
+  - "just the name and price" -> "displayFields": ["name", "price"]
+  - "id and name only" -> "displayFields": ["displayId", "name"]
+  - "with prices" (for products) -> "displayFields": ["name", "price"]
+- Only use real field names from the schema above.
 
 CRITICAL — distinguishing data_query from action_query:
-- "how many products", "what's the price of X", "list of products" -> data_query
-  (these are READS, nothing is created/changed/removed).
-- "create/add/make a product ...", "delete/remove product ...",
-  "edit/update/change product ..." -> action_query.
-- A user asking for a specific OUTPUT FORMAT or brevity on a data_query
-  ("just give me the name and price", "no extra information") is NOT an
-  action — set "minimal": true on the data_query and proceed normally. This
-  is a formatting preference, never smalltalk, never an action.
+- Reads ("how many", "what's the price of X", "list of X") -> data_query.
+- "create/add/make ...", "delete/remove ...", "edit/update/change ..." -> action_query.
+- A user asking for a specific OUTPUT FORMAT or brevity is NOT an action —
+  it's a data_query with "displayFields" set accordingly. Never smalltalk.
 
 Rules for data_query:
-- There is no separate "customers" collection. Customer questions run against
-  invoices.customerName:
-  - "list of customers" -> { "operation": "distinct", "collection": "invoices", "distinctField": "customerName", "filter": {} }
-  - "info about customer X" -> { "operation": "find", "collection": "invoices",
-    "filter": { "customerName": { "$regex": "X", "$options": "i" } }, "customerLookup": true }
+- "info about customer X" -> { "operation": "find", "collection": "invoices",
+  "filter": { "customerName": { "$regex": "X", "$options": "i" } }, "customerLookup": true }
 - "payments" are not separate — use invoices.paymentMethod and invoices.status.
 - "list of categories" -> distinct on the relevant collection's "category" field.
 - If it needs data we don't have (${UNSUPPORTED_DOMAINS.join(', ')}),
@@ -112,10 +119,8 @@ Rules for data_query:
 
 General rule (important):
 - Genuine data-MODIFYING requests (create/update/delete) are action_query,
-  handled by a real, safe, confirmation-gated flow — they are fully
-  supported, never refuse them as "I can't perform actions."
-- Only classify as smalltalk if the message is truly not about data at all
-  (greetings, thanks, unclear chit-chat).
+  fully supported via a safe confirmation flow — never refuse them.
+- Only classify as smalltalk if the message is truly not about data at all.
 
 Return ONLY one JSON object, matching whichever intent shape applies. Nothing else.
 `;
@@ -166,7 +171,7 @@ function validateSpec(spec) {
     return;
   }
 
-  // ---- data_query (unchanged from before) ----
+  // ---- data_query ----
 
   if (spec.unsupported === true) {
     if (!spec.reason) spec.reason = "This question needs data we don't currently track.";
@@ -196,6 +201,15 @@ function validateSpec(spec) {
     }
   }
 
+  // Validate displayFields against the schema too — never let an invented
+  // field name leak through to the renderer.
+  if (Array.isArray(spec.displayFields)) {
+    spec.displayFields = spec.displayFields.filter((f) => allowedFields.includes(f));
+  } else {
+    spec.displayFields = [];
+  }
+
+  spec.countOnly = !!spec.countOnly;
   spec.limit = Math.min(spec.limit || 50, 200);
 }
 
