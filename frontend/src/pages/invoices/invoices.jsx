@@ -24,11 +24,17 @@ function formatAmount(amount) {
   })}`;
 }
 
+const STATUS_OPTIONS = ["paid", "pending", "cancelled"];
+const PAYMENT_OPTIONS = ["cash", "card", "bank_transfer", "unknown"];
+
 function Invoices() {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [paymentFilter, setPaymentFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
 
   useEffect(() => {
     const load = async () => {
@@ -44,16 +50,33 @@ function Invoices() {
     load();
   }, []);
 
+  const categoryOptions = Array.from(
+    new Set(invoices.map((inv) => inv.category).filter(Boolean))
+  ).sort();
+
   const filtered = invoices.filter((inv) => {
     const q = search.trim().toLowerCase();
-    if (!q) return true;
-    return (
+    const matchesSearch =
+      !q ||
       inv.customerName?.toLowerCase().includes(q) ||
       inv.invoiceNumber?.toLowerCase().includes(q) ||
       inv.itemName?.toLowerCase().includes(q) ||
-      inv.category?.toLowerCase().includes(q)
-    );
+      inv.category?.toLowerCase().includes(q);
+
+    const matchesStatus = !statusFilter || inv.status === statusFilter;
+    const matchesPayment = !paymentFilter || inv.paymentMethod === paymentFilter;
+    const matchesCategory = !categoryFilter || inv.category === categoryFilter;
+
+    return matchesSearch && matchesStatus && matchesPayment && matchesCategory;
   });
+
+  const resetFilters = () => {
+    setStatusFilter("");
+    setPaymentFilter("");
+    setCategoryFilter("");
+  };
+
+  const hasActiveFilters = statusFilter || paymentFilter || categoryFilter;
 
   const totalAmount = filtered.reduce((sum, inv) => sum + (inv.amount || 0), 0);
 
@@ -71,6 +94,53 @@ function Invoices() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+      </div>
+
+      <div className="invoices-filters">
+        <select
+          className="invoices-filter-select"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="">All statuses</option>
+          {STATUS_OPTIONS.map((s) => (
+            <option key={s} value={s}>
+              {s.charAt(0).toUpperCase() + s.slice(1)}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className="invoices-filter-select"
+          value={paymentFilter}
+          onChange={(e) => setPaymentFilter(e.target.value)}
+        >
+          <option value="">All payment methods</option>
+          {PAYMENT_OPTIONS.map((p) => (
+            <option key={p} value={p}>
+              {p.replace("_", " ")}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className="invoices-filter-select"
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+        >
+          <option value="">All categories</option>
+          {categoryOptions.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+
+        {hasActiveFilters && (
+          <button className="invoices-clear-filters" onClick={resetFilters}>
+            Clear filters
+          </button>
+        )}
       </div>
 
       <div className="invoices-summary">

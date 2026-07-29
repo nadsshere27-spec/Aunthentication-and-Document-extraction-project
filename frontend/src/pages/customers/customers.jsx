@@ -23,6 +23,7 @@ function Customers() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState(""); // "", "paid", "pending", "cancelled"
 
   const [activeCustomer, setActiveCustomer] = useState(null); // name of drilled-down customer
   const [customerInvoices, setCustomerInvoices] = useState([]);
@@ -60,9 +61,22 @@ function Customers() {
     setCustomerInvoices([]);
   };
 
-  const filtered = customers.filter((c) =>
-    c.customerName?.toLowerCase().includes(search.trim().toLowerCase())
-  );
+  const STATUS_COUNT_KEY = {
+    paid: "paidCount",
+    pending: "pendingCount",
+    cancelled: "cancelledCount",
+  };
+
+  const filtered = customers.filter((c) => {
+    const matchesSearch = c.customerName
+      ?.toLowerCase()
+      .includes(search.trim().toLowerCase());
+
+    const matchesStatus =
+      !statusFilter || (c[STATUS_COUNT_KEY[statusFilter]] || 0) > 0;
+
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <div className="customers-page">
@@ -78,6 +92,28 @@ function Customers() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+      </div>
+
+      <div className="customers-filters">
+        <select
+          className="customers-filter-select"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="">All customers</option>
+          <option value="paid">Has paid invoices</option>
+          <option value="pending">Has pending invoices</option>
+          <option value="cancelled">Has cancelled invoices</option>
+        </select>
+
+        {statusFilter && (
+          <button
+            className="customers-clear-filters"
+            onClick={() => setStatusFilter("")}
+          >
+            Clear filter
+          </button>
+        )}
       </div>
 
       <div className="customers-table-wrapper">

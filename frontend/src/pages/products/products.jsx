@@ -31,6 +31,7 @@ function Products() {
 
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [stockFilter, setStockFilter] = useState(""); // "", "low", "out"
 
   // Add / edit modal
   const [modalOpen, setModalOpen] = useState(false);
@@ -148,6 +149,12 @@ function Products() {
     }
   };
 
+  const visibleProducts = products.filter((p) => {
+    if (stockFilter === "low") return p.stock > 0 && p.stock < 10;
+    if (stockFilter === "out") return p.stock <= 0;
+    return true;
+  });
+
   return (
     <div className="products-page">
       <div className="products-header">
@@ -180,6 +187,16 @@ function Products() {
             </option>
           ))}
         </select>
+
+        <select
+          className="products-category-select"
+          value={stockFilter}
+          onChange={(e) => setStockFilter(e.target.value)}
+        >
+          <option value="">All stock levels</option>
+          <option value="low">Less than 10 in stock</option>
+          <option value="out">Out of stock</option>
+        </select>
       </div>
 
       <div className="products-table-wrapper">
@@ -200,12 +217,12 @@ function Products() {
               </tr>
             </thead>
             <tbody>
-              {products.length === 0 ? (
+              {visibleProducts.length === 0 ? (
                 <tr className="products-empty-row">
                   <td colSpan="6">No products found.</td>
                 </tr>
               ) : (
-                products.map((p) => (
+                visibleProducts.map((p) => (
                   <tr key={p._id}>
                     <td>#{p.displayId ?? "-"}</td>
                     <td>{p.name}</td>
