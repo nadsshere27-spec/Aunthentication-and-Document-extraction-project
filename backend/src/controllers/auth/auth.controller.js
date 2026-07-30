@@ -1,10 +1,15 @@
 // backend/src/controllers/auth/auth.controller.js
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
+const { OAuth2Client } = require('google-auth-library');
 const User = require('../../models/User');
 const { generateToken } = require('../../utils/jwtHelper');
 const { validatePassword } = require('../../utils/passwordValidator');
 const { sendResetPasswordEmail } = require('../../services/emailService');
+
+// Same client ID must be used on the frontend (GoogleOAuthProvider) and here
+// (as the "audience") — that's what proves the token was issued for THIS app.
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const register = async (req, res) => {
   try {
@@ -217,6 +222,81 @@ const resetPassword = async (req, res) => {
   }
 };
 
+// ============================================
+// Google Sign-In
+// Frontend sends the ID token (JWT) it got from Google's Identity Services
+// button. We verify that token directly with Google's servers — we never
+// see or handle the user's Google password.
+// ============================================
+const googleLogin = async (req, res) => {
+  try {
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({ message: 'Google credential is required' });
+    }
+
+    // This call hits Google's servers to confirm the token is genuine,
+    // unexpired, and was issued for our GOOGLE_CLIENT_ID specifically.
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, name, picture, email_verified } = payload;
+
+    if (!email_verified) {
+      return res.status(401).json({ message: 'Your Google email is not verified.' });
+    }
+
+    // Match on googleId first (returning Google user), then fall back to
+    // email (a local-password account signing in with Google for the first
+    // time gets linked instead of duplicated).
+    let user = await User.findOne({ $or: [{ googleId }, { email }] });
+
+    if (user) {
+      if (!user.googleId) {
+        user.googleId = googleId;
+      }
+      if (!user.profilePicture && picture) {
+        user.profilePicture = picture;
+      }
+    } else {
+      user = new User({
+        fullName: name || email.split('@')[0],
+        email,
+        googleId,
+        authProvider: 'google',
+        profilePicture: picture || ''
+      });
+    }
+
+    if (!user.isActive) {
+      return res.status(403).json({ message: 'Account is deactivated. Contact support.' });
+    }
+
+    user.lastLogin = new Date();
+    await user.save();
+
+    const token = generateToken(user._id, user.email);
+
+    res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email
+      },
+      token
+    });
+  } catch (error) {
+    console.error('Google login error:', error);
+    res.status(401).json({ message: 'Google sign-in failed. Please try again.' });
+  }
+};
+
 const getProfile = async (req, res) => {
   try {
     res.status(200).json({
@@ -234,6 +314,7 @@ const getProfile = async (req, res) => {
 module.exports = {
   register,
   login,
+  googleLogin,
   forgotPassword,
   resetPassword,  // ← ADD THIS
   getProfile

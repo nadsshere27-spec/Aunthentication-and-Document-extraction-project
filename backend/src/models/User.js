@@ -17,8 +17,22 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, 'Password is required'],
-    minlength: [8, 'Password must be at least 8 characters']
+    minlength: [8, 'Password must be at least 8 characters'],
+    // Google-signed-up accounts never set a password, so only require one
+    // for accounts created the normal email/password way.
+    required: function () {
+      return this.authProvider === 'local';
+    }
+  },
+  authProvider: {
+    type: String,
+    enum: ['local', 'google'],
+    default: 'local'
+  },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true // sparse = only enforces uniqueness among docs that HAVE a googleId
   },
   isActive: {
     type: Boolean,

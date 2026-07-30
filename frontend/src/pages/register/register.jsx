@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
 import Card from "../../components/Card";
 import InputField from "../../components/InputField";
 import Button from "../../components/Button";
-import { registerUser } from "../../services/api";
+import { registerUser, googleLogin } from "../../services/api";
 import "./register.css";
 
 const PASSWORD_RULES = [
@@ -58,6 +59,32 @@ function Register() {
     }
 
     setLoading(false);
+  };
+
+  // Google sign-up doubles as sign-in: the backend creates the account on
+  // the first successful Google token it sees for a new email, then logs
+  // straight in — no separate "register with Google" step needed.
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setError("");
+    setSuccess("");
+
+    if (!credentialResponse.credential) {
+      setError("Google didn't return a valid credential. Please try again.");
+      return;
+    }
+
+    const result = await googleLogin(credentialResponse.credential);
+
+    if (result.success) {
+      localStorage.setItem("token", result.token);
+      localStorage.setItem("user", JSON.stringify(result.user));
+      setSuccess("Account ready! Redirecting...");
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 1200);
+    } else {
+      setError(result.message || "Google sign-up failed. Please try again.");
+    }
   };
 
   return (
@@ -141,6 +168,19 @@ function Register() {
               disabled={loading || !isFormValid}
             />
           </form>
+
+          <div className="login-divider">
+            <span>or</span>
+          </div>
+
+          <div className="google-login-wrapper">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError("Google sign-up failed. Please try again.")}
+              width="100%"
+              text="signup_with"
+            />
+          </div>
 
           <div className="login-text">
             <span>Already have an account? </span>

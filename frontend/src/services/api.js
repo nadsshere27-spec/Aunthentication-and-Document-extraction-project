@@ -33,6 +33,16 @@ export const loginUser = async (userData) => {
   }
 };
 
+export const googleLogin = async (credential) => {
+  try {
+    const response = await api.post("/auth/google", { credential });
+    return response.data;
+  } catch (error) {
+    if (error.response) return error.response.data;
+    return { success: false, message: error.message || "Network error" };
+  }
+};
+
 export const forgotPassword = async (email) => {
   try {
     const response = await api.post("/auth/forgot-password", { email });

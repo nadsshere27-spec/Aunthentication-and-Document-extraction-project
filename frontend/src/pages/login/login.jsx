@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
 import Card from "../../components/Card";
 import InputField from "../../components/InputField";
 import Button from "../../components/Button";
 import Navbar from "../../components/Navbar";
-import { loginUser } from "../../services/api";
+import { loginUser, googleLogin } from "../../services/api";
 import "./login.css";
 
 function Login() {
@@ -38,6 +39,36 @@ function Login() {
     });
   };
 
+  // Shared by both normal login and Google login — same token/user storage,
+  // same redirect, regardless of which provider issued the session.
+  const completeLogin = (result) => {
+    setSuccess("Login successful! Redirecting...");
+    localStorage.setItem("token", result.token);
+    localStorage.setItem("user", JSON.stringify(result.user));
+
+    setTimeout(() => {
+      navigate("/dashboard");
+    }, 1500);
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setError("");
+    setSuccess("");
+
+    if (!credentialResponse.credential) {
+      setError("Google didn't return a valid credential. Please try again.");
+      return;
+    }
+
+    const result = await googleLogin(credentialResponse.credential);
+
+    if (result.success) {
+      completeLogin(result);
+    } else {
+      setError(result.message || "Google sign-in failed. Please try again.");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -47,10 +78,6 @@ function Login() {
     const result = await loginUser(formData);
 
     if (result.success) {
-      setSuccess("Login successful! Redirecting...");
-      localStorage.setItem("token", result.token);
-      localStorage.setItem("user", JSON.stringify(result.user));
-
       if (rememberMe) {
         localStorage.setItem("rememberedEmail", formData.email);
         localStorage.setItem("rememberedPassword", formData.password);
@@ -59,9 +86,7 @@ function Login() {
         localStorage.removeItem("rememberedPassword");
       }
 
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 1500);
+      completeLogin(result);
     } else {
       setError(result.message || "Login failed. Please try again.");
     }
@@ -121,6 +146,19 @@ function Login() {
 
               <Button text={loading ? "Signing in..." : "Sign In"} type="submit" disabled={loading} />
             </form>
+
+            <div className="login-divider">
+              <span>or</span>
+            </div>
+
+            <div className="google-login-wrapper">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => setError("Google sign-in failed. Please try again.")}
+                width="100%"
+                text="continue_with"
+              />
+            </div>
 
             <div className="register-text">
               <span>Don't have an account? </span>
